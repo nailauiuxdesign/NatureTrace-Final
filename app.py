@@ -5,7 +5,6 @@ from utils.data_utils import save_to_snowflake, fetch_dashboard_data
 from utils.sound_utils import generate_animal_sound
 import os
 from PIL import Image
-import base64
 
 st.set_page_config(layout="wide", page_title="Animal Insight | NatureTrace")
 
@@ -13,11 +12,14 @@ st.set_page_config(layout="wide", page_title="Animal Insight | NatureTrace")
 st.sidebar.title("🌿 Animal Insight")
 page = st.sidebar.radio("Go to", ["Home", "Dashboard"])
 
-uploaded_images = st.session_state.get("uploaded_images", {})
+if "uploaded_images" not in st.session_state:
+    st.session_state.uploaded_images = {}
+
+uploaded_images = st.session_state.uploaded_images
 snowflake_ready = st.secrets.get("snowflake_account") is not None
 
 def display_image_preview(img):
-    st.image(img, use_column_width=True)
+    st.image(img, use_container_width=True)
 
 def handle_upload():
     uploaded_files = st.file_uploader("Upload up to 5 animal images", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
@@ -32,12 +34,10 @@ def handle_upload():
                 st.warning(f"❗ Duplicate image detected: {file.name}")
                 continue
 
-            st.session_state.uploaded_images = uploaded_images
             animal_info = process_images(image)
             facts = generate_animal_facts(animal_info['name'])
             sound_url = generate_animal_sound(animal_info['name'])
-            
-            # Save to session and optionally to Snowflake
+
             uploaded_images[file.name] = {
                 "image": image,
                 "name": animal_info['name'],
@@ -47,10 +47,10 @@ def handle_upload():
             }
 
             if snowflake_ready:
-                save_to_snowflake(file.name, animal_info)
+                save_to_snowflake(file.name, uploaded_images[file.name])
 
 if page == "Home":
-    st.title("🧠 Animal Insight — Discover & Explore")
+    st.title("Animal Insight — Discover & Explore")
     col1, col2 = st.columns([1, 1.5])
 
     with col1:
@@ -70,7 +70,7 @@ if page == "Home":
             st.info("Upload images to see animal details.")
 
 elif page == "Dashboard":
-    st.title("📊 Animal Dashboard")
+    st.title("Animal Dashboard")
     if not snowflake_ready:
         st.warning("Snowflake not configured. Please check secrets.toml")
     else:
