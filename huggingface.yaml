@@ -1,0 +1,6 @@
+# huggingface.yaml
+# This file tells Hugging Face Spaces how to run your app
+sdk: streamlit
+app_file: app.py
+dependencies:
+  - requirements.txt
