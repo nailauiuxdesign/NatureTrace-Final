@@ -1,0 +1,10 @@
+streamlit
+transformers
+torch
+Pillow
+fpdf
+requests
+plotly
+imagehash
+numpy
+scikit-image
