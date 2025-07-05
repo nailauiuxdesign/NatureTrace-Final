@@ -1,67 +1,89 @@
-# utils/data_utils.py
 import streamlit as st
-import pandas as pd
-import snowflake.connector
-import plotly.express as px
+from utils.image_utils import process_images, is_duplicate_image
+from utils.llama_utils import generate_animal_facts
+from utils.data_utils import save_to_snowflake, fetch_dashboard_data
+from utils.sound_utils import generate_animal_sound
+import os
+from PIL import Image
 
-# Setup Snowflake connection
-@st.cache_resource
-def get_snowflake_connection():
-    conn = snowflake.connector.connect(
-        account=st.secrets["snowflake_account"],
-        user=st.secrets["snowflake_user"],
-        password=st.secrets["snowflake_password"],
-        warehouse=st.secrets["snowflake_warehouse"],
-        database=st.secrets["snowflake_database"],
-        schema=st.secrets["snowflake_schema"]
-    )
-    return conn
+st.set_page_config(layout="wide", page_title="Animal Insight | NatureTrace")
 
-def save_to_snowflake(filename, data):
-    conn = get_snowflake_connection()
-    cursor = conn.cursor()
+# Sidebar navigation
+st.sidebar.title("🌿 Animal Insight")
+page = st.sidebar.radio("Go to", ["Home", "Dashboard"])
 
-    insert_query = f"""
-    INSERT INTO animal_insight_data (filename, name, description, facts, sound_url)
-    VALUES (%s, %s, %s, %s, %s)
-    ON CONFLICT (filename) DO NOTHING
-    """
+if "uploaded_images" not in st.session_state:
+    st.session_state.uploaded_images = {}
 
-    try:
-        cursor.execute(insert_query, (
-            filename,
-            data["name"],
-            data["description"],
-            data["facts"],
-            data["sound"]
-        ))
-        conn.commit()
-    except Exception as e:
-        print("Snowflake insert error:", e)
-    finally:
-        cursor.close()
-        conn.close()
+uploaded_images = st.session_state.uploaded_images
+snowflake_ready = st.secrets.get("snowflake_account") is not None
 
-def fetch_dashboard_data():
-    conn = get_snowflake_connection()
-    cursor = conn.cursor()
+def display_image_preview(img):
+    st.image(img, use_container_width=True)
 
-    try:
-        cursor.execute("SELECT name FROM animal_insight_data")
-        df = pd.DataFrame(cursor.fetchall(), columns=["name"])
+def handle_upload():
+    uploaded_files = st.file_uploader("Upload up to 5 animal images", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+    if uploaded_files:
+        if len(uploaded_images) + len(uploaded_files) > 5:
+            st.warning("You can upload a maximum of 5 images.")
+            return
 
-        if df.empty:
-            return []
+        for file in uploaded_files:
+            image = Image.open(file)
+            if is_duplicate_image(image, uploaded_images):
+                st.warning(f"❗ Duplicate image detected: {file.name}")
+                continue
 
-        name_counts = df.value_counts("name").reset_index()
-        name_counts.columns = ["name", "count"]
+            animal_info = process_images(image)
+            facts = generate_animal_facts(animal_info['name'])
+            sound_url = generate_animal_sound(animal_info['name'])
 
-        fig = px.bar(name_counts, x="name", y="count", title="Animal Occurrences")
-        return [fig]
+            uploaded_images[file.name] = {
+                "image": image,
+                "name": animal_info['name'],
+                "description": animal_info['description'],
+                "facts": facts,
+                "sound": sound_url,
+                "added": False
+            }
 
-    except Exception as e:
-        print("Dashboard fetch error:", e)
-        return []
-    finally:
-        cursor.close()
-        conn.close()
+if page == "Home":
+    st.title("🧠 Animal Insight — Discover & Explore")
+    col1, col2 = st.columns([1, 1.5])
+
+    with col1:
+        handle_upload()
+
+    with col2:
+        if uploaded_images:
+            st.subheader("Recognized Animals")
+            for filename, data in uploaded_images.items():
+                st.markdown(f"### {data['name']}")
+                st.image(data['image'], use_container_width=False, width=250)
+                st.write(data['description'])
+                st.markdown(f"**Fun Fact**: {data['facts']}")
+                if data['sound']:
+                    st.audio(data['sound'], format='audio/mp3')
+
+                if not data.get("added") and st.button(f"Add to Dashboard: {data['name']}", key=filename):
+                    if snowflake_ready:
+                        save_to_snowflake(filename, data)
+                        data["added"] = True
+                        st.success(f"✅ {data['name']} added to dashboard!")
+                    else:
+                        st.warning("❄️ Snowflake is not configured. Please check secrets.toml")
+        else:
+            st.info("Upload images to see animal details.")
+
+elif page == "Dashboard":
+    st.title("📊 Animal Dashboard")
+    if not snowflake_ready:
+        st.warning("Snowflake not configured. Please check secrets.toml")
+    else:
+        chart_data = fetch_dashboard_data()
+
+        if chart_data:
+            for chart in chart_data:
+                st.plotly_chart(chart)
+        else:
+            st.info("No data found in Snowflake. Upload animals on Home page first.")
