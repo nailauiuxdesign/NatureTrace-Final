@@ -35,7 +35,12 @@ def handle_upload():
                 continue
 
             animal_info = process_images(image)
-            facts = generate_animal_facts(animal_info['name'])
+
+            try:
+                facts = generate_animal_facts(animal_info['name'])
+            except Exception as e:
+                facts = f"Couldn't fetch fun fact: {str(e)}"
+
             sound_url = generate_animal_sound(animal_info['name'])
 
             uploaded_images[file.name] = {
@@ -50,7 +55,7 @@ def handle_upload():
                 save_to_snowflake(file.name, uploaded_images[file.name])
 
 if page == "Home":
-    st.title("Animal Insight — Discover & Explore")
+    st.title("🧠 Animal Insight — Discover & Explore")
     col1, col2 = st.columns([1, 1.5])
 
     with col1:
@@ -61,7 +66,7 @@ if page == "Home":
             st.subheader("Recognized Animals")
             for filename, data in uploaded_images.items():
                 st.markdown(f"### {data['name']}")
-                st.image(data['image'], use_column_width=False, width=250)
+                st.image(data['image'], use_container_width=True, width=250)
                 st.write(data['description'])
                 st.markdown(f"**Fun Fact**: {data['facts']}")
                 if data['sound']:
@@ -70,7 +75,7 @@ if page == "Home":
             st.info("Upload images to see animal details.")
 
 elif page == "Dashboard":
-    st.title("Animal Dashboard")
+    st.title("📊 Animal Dashboard")
     if not snowflake_ready:
         st.warning("Snowflake not configured. Please check secrets.toml")
     else:
