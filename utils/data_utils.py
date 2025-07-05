@@ -1,67 +1,52 @@
 # utils/data_utils.py
-import streamlit as st
-import pandas as pd
+
 import snowflake.connector
-import plotly.express as px
+import pandas as pd
+from datetime import datetime
+import streamlit as st
 
-# Setup Snowflake connection
-@st.cache_resource
+
 def get_snowflake_connection():
-    conn = snowflake.connector.connect(
-        account=st.secrets["snowflake_account"],
-        user=st.secrets["snowflake_user"],
-        password=st.secrets["snowflake_password"],
-        warehouse=st.secrets["snowflake_warehouse"],
-        database=st.secrets["snowflake_database"],
-        schema=st.secrets["snowflake_schema"]
-    )
-    return conn
-
-def save_to_snowflake(filename, data):
-    conn = get_snowflake_connection()
-    cursor = conn.cursor()
-
-    insert_query = f"""
-    INSERT INTO animal_insight_data (filename, name, description, facts, sound_url)
-    VALUES (%s, %s, %s, %s, %s)
-    ON CONFLICT (filename) DO NOTHING
-    """
-
     try:
-        cursor.execute(insert_query, (
-            filename,
-            data["name"],
-            data["description"],
-            data["facts"],
-            data["sound"]
-        ))
-        conn.commit()
+        conn = snowflake.connector.connect(
+            user=st.secrets["snowflake_user"],
+            password=st.secrets["snowflake_password"],
+            account=st.secrets["snowflake_account"],
+            warehouse=st.secrets["snowflake_warehouse"],
+            database=st.secrets["snowflake_database"],
+            schema=st.secrets["snowflake_schema"]
+        )
+        return conn
     except Exception as e:
-        print("Snowflake insert error:", e)
-    finally:
+        st.error("Snowflake not configured. Please check secrets.toml")
+        return None
+
+def save_to_snowflake(filename, name, description, facts, sound_url):
+    conn = get_snowflake_connection()
+    if not conn:
+        return
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO animal_insight_data (filename, name, description, facts, sound_url)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT(filename) DO NOTHING
+        """, (filename, name, description, facts, sound_url))
         cursor.close()
+    except Exception as e:
+        st.error(f"Error inserting into Snowflake: {e}")
+    finally:
         conn.close()
 
 def fetch_dashboard_data():
     conn = get_snowflake_connection()
-    cursor = conn.cursor()
-
+    if not conn:
+        return pd.DataFrame()
     try:
-        cursor.execute("SELECT name FROM animal_insight_data")
-        df = pd.DataFrame(cursor.fetchall(), columns=["name"])
-
-        if df.empty:
-            return []
-
-        name_counts = df.value_counts("name").reset_index()
-        name_counts.columns = ["name", "count"]
-
-        fig = px.bar(name_counts, x="name", y="count", title="Animal Occurrences")
-        return [fig]
-
+        df = pd.read_sql("SELECT * FROM animal_insight_data ORDER BY timestamp DESC", conn)
+        return df
     except Exception as e:
-        print("Dashboard fetch error:", e)
-        return []
+        st.error(f"Error fetching data from Snowflake: {e}")
+        return pd.DataFrame()
     finally:
-        cursor.close()
         conn.close()

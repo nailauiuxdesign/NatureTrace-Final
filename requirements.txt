@@ -12,3 +12,4 @@ numpy
 scikit-image
 snowflake-connector-python
 torchvision
+uagents

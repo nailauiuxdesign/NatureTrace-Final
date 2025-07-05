@@ -1,4 +1,5 @@
 # utils/sound_utils.py
+<<<<<<< HEAD
 import streamlit as st
 import requests
 
@@ -7,28 +8,55 @@ HEADERS = {
     "Authorization": f"Bearer {st.secrets.get('groq_api_key', '')}",
     "Content-Type": "application/json"
 }
+=======
 
-LLAMA_MODEL = "llama3-8b-8192"
+import requests
 
-# A very basic mockup text-to-sound approach using descriptions. You can integrate real sound libraries later.
-def generate_animal_sound(animal_name):
-    prompt = f"Describe what the sound of a {animal_name} would be like. Keep it vivid and short."
+def generate_animal_sound(animal_name: str) -> str:
+    """
+    Attempt to fetch a valid sound file URL from multiple sources for a given animal name.
+    Order of preference:
+    1. Hugging Face Assets
+    2. Xeno-Canto (Birds)
+    3. Internet Archive
+    """
+>>>>>>> d6160eab184c5c89303a3fbfc56dcf6b8e0e4712
 
-    body = {
-        "model": LLAMA_MODEL,
-        "messages": [
-            {"role": "system", "content": "You are a wildlife sound researcher."},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.6
-    }
+    animal_name_clean = animal_name.lower().strip().replace(" ", "_")
+    encoded_name = requests.utils.quote(animal_name)
 
+    # 1. Hugging Face local hosted file
+    hf_base = "https://huggingface.co/spaces/YOUR_USERNAME/YOUR_SPACE_NAME/resolve/main/assets/sounds/"
+    for ext in [".mp3", ".wav"]:
+        hf_url = f"{hf_base}{animal_name_clean}{ext}"
+        try:
+            r = requests.head(hf_url)
+            if r.status_code == 200:
+                return hf_url
+        except:
+            pass
+
+    # 2. Xeno-Canto (for birds)
     try:
-        response = requests.post(GROQ_API_URL, headers=HEADERS, json=body)
-        response.raise_for_status()
-        data = response.json()
-        text_description = data['choices'][0]['message']['content'].strip()
-        # Optional: return description only if no real audio synthesis used
-        return f"data:audio/mp3;base64,PLACEHOLDER_BASE64"  # You can later hook this to real TTS MP3
-    except Exception as e:
-        return None
+        xc_resp = requests.get(f"https://xeno-canto.org/api/2/recordings?query={encoded_name}")
+        if xc_resp.ok:
+            data = xc_resp.json()
+            if data.get("recordings"):
+                return f"https:{data['recordings'][0]['file']}"
+    except:
+        pass
+
+    # 3. Internet Archive (wild fallback)
+    try:
+        ia_url = f"https://archive.org/advancedsearch.php?q={encoded_name}+AND+mediatype%3Aaudio&fl[]=identifier&output=json"
+        ia_resp = requests.get(ia_url)
+        if ia_resp.ok:
+            docs = ia_resp.json().get(\"response\", {}).get(\"docs\", [])
+            if docs:
+                identifier = docs[0][\"identifier\"]
+                return f\"https://archive.org/download/{identifier}/{identifier}.mp3\"
+    except:
+        pass
+
+    # No sound found
+    return \"\"
