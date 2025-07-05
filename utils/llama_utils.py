@@ -1,36 +1,55 @@
 # utils/llama_utils.py
-import os
+
 import requests
+import os
+import streamlit as st
 
-GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-
-HEADERS = {
-    "Authorization": f"Bearer {os.getenv('GROQ_API_KEY') or os.environ.get('GROQ_API_KEY') or ''}",
-    "Content-Type": "application/json"
-}
-
-# Use LLaMA model via Groq (llama3-8b or llama3-70b)
-LLAMA_MODEL = "llama3-70b-8192"
-
-def generate_animal_facts(animal_name):
-    prompt = (
-        f"Give me an interesting educational fact about a {animal_name}. "
-        "Make it child-friendly, curious, and one or two sentences max."
-    )
-
-    body = {
-        "model": LLAMA_MODEL,
-        "messages": [
-            {"role": "system", "content": "You are a fun and educational zoologist."},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.7
-    }
+def get_fun_fact(animal):
+    api_key = st.secrets.get("groq_api_key")
+    if not api_key:
+        return "Missing Groq API key."
 
     try:
-        response = requests.post(GROQ_API_URL, headers=HEADERS, json=body)
-        response.raise_for_status()
-        data = response.json()
-        return data['choices'][0]['message']['content'].strip()
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama3-8b-8192",
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant that gives fun animal facts."},
+                    {"role": "user", "content": f"Tell me a fun fact about a {animal}."}
+                ]
+            }
+        )
+        result = response.json()
+        return result["choices"][0]["message"]["content"]
     except Exception as e:
         return f"Couldn't fetch fun fact: {str(e)}"
+
+def generate_description(animal):
+    api_key = st.secrets.get("groq_api_key")
+    if not api_key:
+        return "Missing Groq API key."
+
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama3-8b-8192",
+                "messages": [
+                    {"role": "system", "content": "You describe animals in detail for educational purposes."},
+                    {"role": "user", "content": f"Write a detailed description of a {animal}, including appearance, behavior, and habitat."}
+                ]
+            }
+        )
+        result = response.json()
+        return result["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"Couldn't fetch description: {str(e)}"
