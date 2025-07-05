@@ -3,8 +3,8 @@ title: NatureTrace
 emoji: 🔥
 colorFrom: green
 colorTo: purple
-sdk: gradio
-sdk_version: 5.35.0
+sdk: streamlit
+sdk_version: 1.46.1
 app_file: app.py
 pinned: false
 license: mit
