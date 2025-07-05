@@ -8,3 +8,5 @@ plotly
 imagehash
 numpy
 scikit-image
+snowflake-connector-python
+torchvision

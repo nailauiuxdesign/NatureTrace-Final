@@ -1,11 +1,10 @@
 # utils/sound_utils.py
-import os
+import streamlit as st
 import requests
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_API_KEY = os.getenv("GROQ_API_KEY") or os.environ.get("GROQ_API_KEY") or ""
 HEADERS = {
-    "Authorization": f"Bearer {GROQ_API_KEY}",
+    "Authorization": f"Bearer {st.secrets.get('groq_api_key', '')}",
     "Content-Type": "application/json"
 }
 
