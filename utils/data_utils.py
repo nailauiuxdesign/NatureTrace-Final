@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime
 import streamlit as st
 
+
 def get_snowflake_connection():
     try:
         conn = snowflake.connector.connect(
