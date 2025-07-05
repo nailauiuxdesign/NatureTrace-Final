@@ -14,7 +14,7 @@ async def get_mammal_sound(ctx: Context, msg: SoundRequest):
     animal = msg.animal.lower().replace(" ", "_")
 
     # 1. Try Hugging Face-hosted MP3
-    base_url = "https://huggingface.co/spaces/YOUR_USERNAME/YOUR_SPACE_NAME/resolve/main/assets/sounds/"
+    base_url = "https://huggingface.co/spaces/NatureTraceHack/NatureTrace/resolve/main/assets/sounds/"
     for ext in [".mp3", ".wav"]:
         url = f"{base_url}{animal}{ext}"
         try:
