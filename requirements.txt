@@ -9,3 +9,4 @@ pandas
 plotly
 imagehash
 timm  # 👈 Required for DETR model
+uagents
