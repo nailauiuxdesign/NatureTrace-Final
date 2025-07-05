@@ -1,10 +1,11 @@
+# requirements.txt
 streamlit
+Pillow
 transformers
 torch
-Pillow
-fpdf
+torchvision
 requests
+snowflake-connector-python
+pandas
 plotly
 imagehash
-numpy
-scikit-image
