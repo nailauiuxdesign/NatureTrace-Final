@@ -8,7 +8,6 @@ from PIL import Image
 
 st.set_page_config(layout="wide", page_title="Animal Insight | NatureTrace")
 
-
 # Sidebar navigation
 st.sidebar.title("🌿 Animal Insight")
 page = st.sidebar.radio("Go to", ["Home", "Dashboard"])
