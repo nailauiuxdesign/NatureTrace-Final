@@ -1,65 +1,67 @@
 # utils/data_utils.py
-import snowflake.connector
-import pandas as pd
-import plotly.express as px
 import streamlit as st
+import pandas as pd
+import snowflake.connector
+import plotly.express as px
 
+# Setup Snowflake connection
+@st.cache_resource
 def get_snowflake_connection():
-    return snowflake.connector.connect(
+    conn = snowflake.connector.connect(
+        account=st.secrets["snowflake_account"],
         user=st.secrets["snowflake_user"],
         password=st.secrets["snowflake_password"],
-        account=st.secrets["snowflake_account"],
         warehouse=st.secrets["snowflake_warehouse"],
         database=st.secrets["snowflake_database"],
         schema=st.secrets["snowflake_schema"]
     )
+    return conn
 
-def save_to_snowflake(image_id, animal_data):
+def save_to_snowflake(filename, data):
+    conn = get_snowflake_connection()
+    cursor = conn.cursor()
+
+    insert_query = f"""
+    INSERT INTO animal_insight_data (filename, name, description, facts, sound_url)
+    VALUES (%s, %s, %s, %s, %s)
+    ON CONFLICT (filename) DO NOTHING
+    """
+
     try:
-        conn = get_snowflake_connection()
-        cur = conn.cursor()
-
-        # Create table if it doesn't exist
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS animals (
-                image_id STRING,
-                name STRING,
-                description STRING,
-                facts STRING
-            )
-        """)
-
-        # Insert record
-        cur.execute("""
-            INSERT INTO animals (image_id, name, description, facts)
-            VALUES (%s, %s, %s, %s)
-        """, (image_id, animal_data["name"], animal_data["description"], animal_data["facts"]))
-
+        cursor.execute(insert_query, (
+            filename,
+            data["name"],
+            data["description"],
+            data["facts"],
+            data["sound"]
+        ))
         conn.commit()
-        cur.close()
-        conn.close()
     except Exception as e:
-        st.error(f"Failed to save to Snowflake: {str(e)}")
+        print("Snowflake insert error:", e)
+    finally:
+        cursor.close()
+        conn.close()
 
 def fetch_dashboard_data():
+    conn = get_snowflake_connection()
+    cursor = conn.cursor()
+
     try:
-        conn = get_snowflake_connection()
-        cur = conn.cursor()
+        cursor.execute("SELECT name FROM animal_insight_data")
+        df = pd.DataFrame(cursor.fetchall(), columns=["name"])
 
-        # Fetch data
-        cur.execute("SELECT name, COUNT(*) AS count FROM animals GROUP BY name")
-        rows = cur.fetchall()
-        df = pd.DataFrame(rows, columns=["Animal", "Count"])
+        if df.empty:
+            return []
 
-        charts = []
-        if not df.empty:
-            bar = px.bar(df, x="Animal", y="Count", title="Animal Frequency")
-            pie = px.pie(df, names="Animal", values="Count", title="Animal Distribution")
-            charts.extend([bar, pie])
+        name_counts = df.value_counts("name").reset_index()
+        name_counts.columns = ["name", "count"]
 
-        cur.close()
-        conn.close()
-        return charts
+        fig = px.bar(name_counts, x="name", y="count", title="Animal Occurrences")
+        return [fig]
+
     except Exception as e:
-        st.error(f"Failed to fetch dashboard data: {str(e)}")
+        print("Dashboard fetch error:", e)
         return []
+    finally:
+        cursor.close()
+        conn.close()
