@@ -10,6 +10,5 @@ plotly
 imagehash
 numpy
 scikit-image
-snowflake-connector-python
-torchvision
 uagents
+pyarrow<19.0.0
