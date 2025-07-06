@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 from utils.image_utils import process_images, is_duplicate_image
 from utils.data_utils import save_to_snowflake, fetch_dashboard_data, update_animal_sound_url
-from utils.map_utils import get_animal_habitat_map, get_interactive_map_with_controls
+from utils.map_utils import get_animal_habitat_map, get_interactive_map_with_controls, get_comprehensive_animal_map, get_category_statistics_map
 from utils.llama_utils import generate_animal_facts, generate_description
 from utils.sound_utils import test_multiple_sound_sources, fetch_clean_animal_sound, prioritize_inaturalist_for_mammals
 
@@ -134,160 +134,249 @@ elif page == "Animal Dashboard":
     if df.empty:
         st.info("No data available yet. Upload animals to populate the dashboard.")
     else:
-        # Main layout: Dashboard on left, Map on right
-        dashboard_col, map_col = st.columns([1.2, 0.8])
-        
         # Check column names (handle both NAME and name)
         name_col = 'NAME' if 'NAME' in df.columns else 'name'
         category_col = 'CATEGORY' if 'CATEGORY' in df.columns else 'category'
         animal_names = df[name_col].tolist()
         
-        # Initialize selected animal for map
-        if 'selected_map_animal' not in st.session_state:
-            st.session_state.selected_map_animal = animal_names[0] if animal_names else ""
+        # Get available categories
+        categories = ["All Categories"]
+        if category_col in df.columns:
+            categories.extend(sorted(df[category_col].dropna().unique()))
         
-        with dashboard_col:
-            st.subheader("🐾 Your Animals")
+        # Category selector for map filtering
+        st.subheader("🗺️ Global Animal Habitat Map")
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col1:
+            selected_category = st.selectbox(
+                "🎯 Filter by Category:",
+                options=categories,
+                index=0,
+                help="Select a specific category to focus the map, or choose 'All Categories' to see everything"
+            )
+        
+        with col2:
+            show_stats = st.checkbox("📊 Show Statistics", value=True)
+        
+        with col3:
+            map_height = st.select_slider(
+                "🔧 Map Size:",
+                options=["Compact", "Standard", "Large"],
+                value="Standard"
+            )
+        
+        # Show statistics overview if enabled
+        if show_stats and selected_category == "All Categories":
+            stats_map_html = get_category_statistics_map(df)
+            st.components.v1.html(stats_map_html, height=500)
+        
+        # Show main comprehensive map
+        with st.spinner("🌍 Loading interactive habitat map..."):
+            map_filter = None if selected_category == "All Categories" else selected_category
+            comprehensive_map_html = get_comprehensive_animal_map(df, selected_category=map_filter)
             
+            height_mapping = {"Compact": 500, "Standard": 650, "Large": 800}
+            map_display_height = height_mapping[map_height]
+            
+            if comprehensive_map_html:
+                st.components.v1.html(comprehensive_map_html, height=map_display_height)
+            else:
+                st.error("Could not generate comprehensive map.")
+        
+        # Add map interaction info
+        if selected_category == "All Categories":
+            st.info("🎨 **Map Legend:** Each color represents a different animal category. Zoom in to explore specific conservation areas and habitats!")
+        else:
+            filtered_count = len(df[df[category_col] == selected_category]) if category_col in df.columns else 0
+            st.info(f"🔍 **Filtered View:** Showing habitats for {filtered_count} {selected_category.lower()} animals. Switch to 'All Categories' to see the full map.")
+        
+        st.markdown("---")
+        
+        # Animal Dashboard Section
+        st.subheader("🐾 Your Animal Collection")
+        
+        # Layout options
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            view_mode = st.radio(
+                "📋 Display Mode:",
+                options=["Category Tabs", "Grid View", "List View"],
+                horizontal=True,
+                index=0
+            )
+        
+        with col2:
+            if st.button("🔄 Refresh Data"):
+                st.rerun()
+        
+        # Filter animals based on selected category
+        display_df = df if selected_category == "All Categories" else df[df[category_col] == selected_category] if category_col in df.columns else df
+        
+        if view_mode == "Category Tabs":
             # Group animals by category
             if category_col in df.columns:
-                categories = df[category_col].dropna().unique()
+                all_categories = df[category_col].dropna().unique()
                 
                 # Create tabs for each category
-                if len(categories) > 0:
-                    tabs = st.tabs([f"🦁 {cat}" for cat in categories] + ["📊 All Data"])
+                if len(all_categories) > 0:
+                    tabs = st.tabs([f"🦁 {cat} ({len(df[df[category_col] == cat])})" for cat in sorted(all_categories)] + ["📊 All Data"])
                     
                     # Category tabs
-                    for i, category in enumerate(categories):
+                    for i, category in enumerate(sorted(all_categories)):
                         with tabs[i]:
                             st.subheader(f"{category} Animals")
                             category_animals = df[df[category_col] == category]
                             
-                            # Create animal cards in columns (2 columns to fit the layout)
-                            cols = st.columns(2)
+                            # Create animal cards in columns
+                            cols = st.columns(3)
                             for idx, (_, animal) in enumerate(category_animals.iterrows()):
-                                with cols[idx % 2]:
+                                with cols[idx % 3]:
                                     animal_name = animal.get(name_col, 'Unknown')
                                     
-                                    # Animal card with better styling
+                                    # Animal card with category color
+                                    category_colors = {
+                                        'Bird': '#FF6B6B', 'Mammal': '#4ECDC4', 'Reptile': '#45B7D1', 
+                                        'Amphibian': '#96CEB4', 'Fish': '#FECA57', 'Insect': '#FF9FF3', 
+                                        'Arachnid': '#54A0FF', 'Other': '#9C88FF'
+                                    }
+                                    card_color = category_colors.get(category, '#9C88FF')
+                                    
                                     with st.container():
-                                        st.markdown(f"#### 🐾 {animal_name}")
+                                        st.markdown(f"""
+                                        <div style="border-left: 4px solid {card_color}; padding-left: 10px; margin-bottom: 20px;">
+                                            <h4 style="color: {card_color}; margin: 0;">🐾 {animal_name}</h4>
+                                        </div>
+                                        """, unsafe_allow_html=True)
                                         
                                         # Show image if available
                                         if 'INATURAL_PIC' in animal and pd.notna(animal['INATURAL_PIC']):
                                             try:
-                                                st.image(animal['INATURAL_PIC'], width=150)
+                                                st.image(animal['INATURAL_PIC'], width=200)
                                             except:
                                                 st.write("📷 Image not available")
                                         
                                         # Basic info
                                         if 'DESCRIPTION' in animal and pd.notna(animal['DESCRIPTION']):
-                                            st.write(f"**Description:** {animal['DESCRIPTION'][:80]}...")
+                                            st.write(f"**Description:** {str(animal['DESCRIPTION'])[:100]}...")
                                         
                                         # Action buttons
                                         btn_col1, btn_col2 = st.columns(2)
                                         with btn_col1:
-                                            if st.button(f"View Profile", key=f"profile_{animal_name}_{idx}"):
+                                            if st.button(f"View Profile", key=f"profile_tab_{animal_name}_{idx}"):
                                                 st.session_state.selected_animal = animal_name
                                                 st.session_state.animal_data = animal.to_dict()
                                                 st.session_state.current_page = "Animal Profile"
                                                 st.rerun()
                                         
                                         with btn_col2:
-                                            if st.button(f"Show Map", key=f"map_{animal_name}_{idx}"):
-                                                st.session_state.selected_map_animal = animal_name
-                                                st.rerun()
-                                    
-                                    st.markdown("---")  # Separator between cards
+                                            if st.button(f"Show on Map", key=f"map_tab_{animal_name}_{idx}"):
+                                                # Show individual animal map
+                                                with st.spinner(f"Loading {animal_name} habitat..."):
+                                                    individual_map = get_interactive_map_with_controls(animal_name)
+                                                    if individual_map:
+                                                        st.components.v1.html(individual_map, height=400)
                     
                     # All data tab
                     with tabs[-1]:
-                        st.subheader("All Animals Data")
+                        st.subheader("Complete Animal Database")
                         st.dataframe(df, use_container_width=True)
                         
-                        # Statistics in smaller columns
+                        # Statistics
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.write("**Animals by Name**")
-                            st.bar_chart(df[name_col].value_counts().head(5))
+                            st.write("**Animals by Name (Top 10)**")
+                            st.bar_chart(df[name_col].value_counts().head(10))
                         with col2:
                             if category_col in df.columns:
                                 st.write("**Animals by Category**")
                                 st.bar_chart(df[category_col].value_counts())
                 else:
-                    # No categories, show all animals
-                    st.subheader("All Animals")
-                    cols = st.columns(2)
-                    for idx, (_, animal) in enumerate(df.iterrows()):
-                        with cols[idx % 2]:
-                            animal_name = animal.get(name_col, 'Unknown')
-                            
-                            with st.container():
-                                st.markdown(f"#### 🐾 {animal_name}")
-                                
-                                if 'INATURAL_PIC' in animal and pd.notna(animal['INATURAL_PIC']):
-                                    try:
-                                        st.image(animal['INATURAL_PIC'], width=150)
-                                    except:
-                                        st.write("📷 Image not available")
-                                
-                                # Action buttons
-                                btn_col1, btn_col2 = st.columns(2)
-                                with btn_col1:
-                                    if st.button(f"View Profile", key=f"profile_{animal_name}_{idx}"):
-                                        st.session_state.selected_animal = animal_name
-                                        st.session_state.animal_data = animal.to_dict()
-                                        st.session_state.current_page = "Animal Profile"
-                                        st.rerun()
-                                
-                                with btn_col2:
-                                    if st.button(f"Show Map", key=f"map_{animal_name}_{idx}"):
-                                        st.session_state.selected_map_animal = animal_name
-                                        st.rerun()
-                            
-                            st.markdown("---")
+                    st.info("No categories found in the data.")
             else:
-                # Fallback to simple view
-                st.dataframe(df, use_container_width=True)
-                st.bar_chart(df[name_col].value_counts())
+                st.info("No category information available.")
         
-        with map_col:
-            st.subheader("🗺️ Habitat Map")
+        elif view_mode == "Grid View":
+            # Grid layout for all animals
+            st.subheader(f"Grid View - {len(display_df)} Animals" + (f" ({selected_category})" if selected_category != "All Categories" else ""))
             
-            # Animal selector for map
-            selected_for_map = st.selectbox(
-                "🔍 Select animal to view habitat:",
-                options=animal_names,
-                index=animal_names.index(st.session_state.selected_map_animal) if st.session_state.selected_map_animal in animal_names else 0,
-                key="map_selector"
-            )
+            cols = st.columns(4)
+            for idx, (_, animal) in enumerate(display_df.iterrows()):
+                with cols[idx % 4]:
+                    animal_name = animal.get(name_col, 'Unknown')
+                    animal_category = animal.get(category_col, 'Other')
+                    
+                    # Color coding
+                    category_colors = {
+                        'Bird': '#FF6B6B', 'Mammal': '#4ECDC4', 'Reptile': '#45B7D1', 
+                        'Amphibian': '#96CEB4', 'Fish': '#FECA57', 'Insect': '#FF9FF3', 
+                        'Arachnid': '#54A0FF', 'Other': '#9C88FF'
+                    }
+                    card_color = category_colors.get(animal_category, '#9C88FF')
+                    
+                    with st.container():
+                        st.markdown(f"""
+                        <div style="border: 2px solid {card_color}; border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 15px;">
+                            <div style="background: {card_color}; color: white; margin: -10px -10px 10px -10px; padding: 8px; border-radius: 8px 8px 0 0;">
+                                <strong>{animal_category}</strong>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.markdown(f"**{animal_name}**")
+                        
+                        if 'INATURAL_PIC' in animal and pd.notna(animal['INATURAL_PIC']):
+                            try:
+                                st.image(animal['INATURAL_PIC'], width=150)
+                            except:
+                                st.write("📷 No image")
+                        
+                        if st.button(f"View", key=f"grid_{animal_name}_{idx}", use_container_width=True):
+                            st.session_state.selected_animal = animal_name
+                            st.session_state.animal_data = animal.to_dict()
+                            st.session_state.current_page = "Animal Profile"
+                            st.rerun()
+        
+        else:  # List View
+            st.subheader(f"List View - {len(display_df)} Animals" + (f" ({selected_category})" if selected_category != "All Categories" else ""))
             
-            # Update session state when selection changes
-            if selected_for_map != st.session_state.selected_map_animal:
-                st.session_state.selected_map_animal = selected_for_map
-            
-            if selected_for_map:
-                # Generate and display enhanced map
-                with st.spinner("Loading habitat map..."):
-                    map_html = get_interactive_map_with_controls(selected_for_map)
-                    if map_html:
-                        st.components.v1.html(map_html, height=500)
-                    else:
-                        st.error("Could not generate map for this animal.")
-                        # Fallback to basic map
-                        basic_map = get_animal_habitat_map(selected_for_map)
-                        if basic_map:
-                            st.components.v1.html(basic_map, height=400)
-                        else:
-                            st.error("No map data available for this animal.")
+            for idx, (_, animal) in enumerate(display_df.iterrows()):
+                animal_name = animal.get(name_col, 'Unknown')
+                animal_category = animal.get(category_col, 'Other')
                 
-                # Show animal info below map
-                animal_row = df[df[name_col] == selected_for_map].iloc[0]
-                if 'DESCRIPTION' in animal_row and pd.notna(animal_row['DESCRIPTION']):
-                    st.write(f"**About {selected_for_map}:**")
-                    st.write(animal_row['DESCRIPTION'][:200] + "..." if len(str(animal_row['DESCRIPTION'])) > 200 else animal_row['DESCRIPTION'])
-            else:
-                st.info("Select an animal to view its habitat map.")
+                # Color coding for list items
+                category_colors = {
+                    'Bird': '#FF6B6B', 'Mammal': '#4ECDC4', 'Reptile': '#45B7D1', 
+                    'Amphibian': '#96CEB4', 'Fish': '#FECA57', 'Insect': '#FF9FF3', 
+                    'Arachnid': '#54A0FF', 'Other': '#9C88FF'
+                }
+                card_color = category_colors.get(animal_category, '#9C88FF')
+                
+                col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+                
+                with col1:
+                    st.markdown(f"""
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 20px; height: 20px; background-color: {card_color}; border-radius: 50%; margin-right: 15px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+                        <strong style="font-size: 1.1em;">{animal_name}</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    st.write(f"**Category:** {animal_category}")
+                
+                with col3:
+                    if 'DESCRIPTION' in animal and pd.notna(animal['DESCRIPTION']):
+                        st.write(f"{str(animal['DESCRIPTION'])[:50]}...")
+                
+                with col4:
+                    if st.button("View", key=f"list_{animal_name}_{idx}"):
+                        st.session_state.selected_animal = animal_name
+                        st.session_state.animal_data = animal.to_dict()
+                        st.session_state.current_page = "Animal Profile"
+                        st.rerun()
+                
+                st.markdown("---")
 
 elif page == "Animal Profile":
     st.title("🐾 Animal Profile")
