@@ -251,17 +251,35 @@ def update_animal_sound_url(animal_id=None, animal_name=None, sound_url=None, so
         
         # Update the database with the sound URL
         if animal_id:
-            cursor.execute("""
-                UPDATE animal_insight_data 
-                SET sound_url = %s, sound_source = %s, sound_updated = CURRENT_TIMESTAMP()
-                WHERE id = %s
-            """, (sound_url, source, animal_id))
+            # Try to update with new columns first, fallback to old structure
+            try:
+                cursor.execute("""
+                    UPDATE animal_insight_data 
+                    SET sound_url = %s, sound_source = %s, sound_updated = CURRENT_TIMESTAMP()
+                    WHERE id = %s
+                """, (sound_url, source, animal_id))
+            except:
+                # Fallback to basic update if new columns don't exist
+                cursor.execute("""
+                    UPDATE animal_insight_data 
+                    SET sound_url = %s
+                    WHERE id = %s
+                """, (sound_url, animal_id))
         else:
-            cursor.execute("""
-                UPDATE animal_insight_data 
-                SET sound_url = %s, sound_source = %s, sound_updated = CURRENT_TIMESTAMP()
-                WHERE UPPER(name) = UPPER(%s)
-            """, (sound_url, source, animal_name))
+            # Try to update with new columns first, fallback to old structure
+            try:
+                cursor.execute("""
+                    UPDATE animal_insight_data 
+                    SET sound_url = %s, sound_source = %s, sound_updated = CURRENT_TIMESTAMP()
+                    WHERE UPPER(name) = UPPER(%s)
+                """, (sound_url, source, animal_name))
+            except:
+                # Fallback to basic update if new columns don't exist
+                cursor.execute("""
+                    UPDATE animal_insight_data 
+                    SET sound_url = %s
+                    WHERE UPPER(name) = UPPER(%s)
+                """, (sound_url, animal_name))
         
         affected_rows = cursor.rowcount
         cursor.close()

@@ -13,3 +13,6 @@ scikit-image
 uagents
 pyarrow<19.0.0
 wikipedia
+pydub
+SpeechRecognition
+pyaudio

@@ -7,6 +7,7 @@ import logging
 import re
 from urllib.parse import quote, urljoin
 from utils.freesound_client import freesound_client
+from utils.audio_processor import audio_processor, AUDIO_PROCESSING_AVAILABLE
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -667,3 +668,103 @@ def test_multiple_sound_sources(animal_name: str, animal_type: str = "unknown") 
         results["meets_1_second_requirement"] = duration and duration <= 1 if duration else "unknown"
     
     return results
+
+def fetch_clean_animal_sound(animal_name: str, animal_type: str = "unknown") -> Dict[str, Any]:
+    """
+    Fetch animal sound and automatically remove human speech if detected
+    """
+    try:
+        # First, get the best sound from multiple sources
+        sound_results = test_multiple_sound_sources(animal_name, animal_type)
+        
+        if not sound_results.get('best_url'):
+            return {
+                "success": False,
+                "message": "No sound sources found",
+                "original_url": None,
+                "processed_url": None,
+                "analysis": None
+            }
+        
+        original_url = sound_results['best_url']
+        source = sound_results['best_source']
+        
+        # If audio processing is available, analyze and clean the audio
+        if AUDIO_PROCESSING_AVAILABLE:
+            logger.info(f"Analyzing audio content for {animal_name}")
+            
+            # Analyze the audio to detect speech content
+            analysis = audio_processor.analyze_audio_content(original_url, animal_name)
+            
+            # If significant speech detected, process to remove it
+            if analysis.get('speech_ratio', 0) > 0.3:  # More than 30% speech
+                logger.info(f"High speech content detected ({analysis['speech_ratio']:.1%}) - processing audio")
+                processed_url = audio_processor.process_audio_remove_speech(original_url, animal_name)
+                
+                if processed_url:
+                    return {
+                        "success": True,
+                        "message": f"Sound processed to remove speech from {source}",
+                        "original_url": original_url,
+                        "processed_url": processed_url,
+                        "source": source,
+                        "analysis": analysis,
+                        "speech_removed": True
+                    }
+            
+            # If low speech content or processing failed, use original
+            return {
+                "success": True,
+                "message": f"Clean animal sound from {source}",
+                "original_url": original_url,
+                "processed_url": original_url,  # Same as original
+                "source": source,
+                "analysis": analysis,
+                "speech_removed": False
+            }
+        else:
+            # Audio processing not available, return original
+            return {
+                "success": True,
+                "message": f"Sound from {source} (processing not available)",
+                "original_url": original_url,
+                "processed_url": original_url,
+                "source": source,
+                "analysis": None,
+                "speech_removed": False
+            }
+            
+    except Exception as e:
+        logger.error(f"Error in fetch_clean_animal_sound: {e}")
+        return {
+            "success": False,
+            "message": f"Error processing sound: {str(e)}",
+            "original_url": None,
+            "processed_url": None,
+            "analysis": None
+        }
+
+def prioritize_inaturalist_for_mammals(animal_name: str, animal_type: str = "unknown") -> Optional[str]:
+    """
+    Special function to prioritize iNaturalist for mammals like Bobcat
+    since it's more reliable than Macaulay Library for certain species
+    """
+    logger.info(f"Prioritizing iNaturalist for {animal_name}")
+    
+    # Create fetcher instance
+    fetcher = AnimalSoundFetcher()
+    
+    # Try iNaturalist first for mammals
+    if "mammal" in animal_type.lower() or any(mammal in animal_name.lower() 
+                                             for mammal in ["bobcat", "lynx", "cat", "bear", "wolf", "coyote"]):
+        try:
+            sound_url = fetcher._query_inaturalist(animal_name, max_duration=30)
+            if sound_url and fetcher._validate_audio_enhanced(sound_url):
+                logger.info(f"Found clean sound from iNaturalist for {animal_name}")
+                return sound_url
+        except Exception as e:
+            logger.warning(f"iNaturalist failed for {animal_name}: {e}")
+    
+    # Fallback to other sources with speech processing
+    result = fetch_clean_animal_sound(animal_name, animal_type)
+    return result.get('processed_url') if result.get('success') else None

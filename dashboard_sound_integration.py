@@ -149,25 +149,42 @@ class DashboardSoundManager:
             cursor.execute("SELECT COUNT(*) FROM animal_insight_data WHERE sound_url IS NULL OR sound_url = ''")
             animals_without_sound = cursor.fetchone()[0]
             
-            # Get breakdown by sound source
-            cursor.execute("""
-                SELECT sound_source, COUNT(*) 
-                FROM animal_insight_data 
-                WHERE sound_url IS NOT NULL AND sound_url != ''
-                GROUP BY sound_source
-                ORDER BY COUNT(*) DESC
-            """)
-            sources = dict(cursor.fetchall())
+            # Try to get breakdown by sound source (fallback if column doesn't exist)
+            sources = {}
+            try:
+                cursor.execute("""
+                    SELECT sound_source, COUNT(*) 
+                    FROM animal_insight_data 
+                    WHERE sound_url IS NOT NULL AND sound_url != ''
+                    GROUP BY sound_source
+                    ORDER BY COUNT(*) DESC
+                """)
+                sources = dict(cursor.fetchall())
+            except:
+                # Column might not exist yet, that's okay
+                sources = {"various": animals_with_sound}
             
-            # Get recently updated sounds
-            cursor.execute("""
-                SELECT name, sound_source, sound_updated
-                FROM animal_insight_data 
-                WHERE sound_updated IS NOT NULL
-                ORDER BY sound_updated DESC
-                LIMIT 10
-            """)
-            recent_updates = cursor.fetchall()
+            # Try to get recently updated sounds (fallback if column doesn't exist)
+            recent_updates = []
+            try:
+                cursor.execute("""
+                    SELECT name, sound_source, sound_updated
+                    FROM animal_insight_data 
+                    WHERE sound_updated IS NOT NULL
+                    ORDER BY sound_updated DESC
+                    LIMIT 10
+                """)
+                recent_updates = cursor.fetchall()
+            except:
+                # Column might not exist yet, get recent animals with sounds instead
+                cursor.execute("""
+                    SELECT name, 'unknown', timestamp
+                    FROM animal_insight_data 
+                    WHERE sound_url IS NOT NULL AND sound_url != ''
+                    ORDER BY timestamp DESC
+                    LIMIT 10
+                """)
+                recent_updates = cursor.fetchall()
             
             cursor.close()
             
