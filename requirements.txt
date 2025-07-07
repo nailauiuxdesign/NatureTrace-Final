@@ -16,3 +16,7 @@ wikipedia
 pydub
 SpeechRecognition
 pyaudio
+ultralytics
+opencv-python
+groq
+wikipedia-api

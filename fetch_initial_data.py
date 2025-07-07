@@ -20,7 +20,12 @@ def get_wikipedia_data(wikipedia_url):
         # Wikipedia API endpoint for page summary and image
         api_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{page_title}"
         
-        response = requests.get(api_url, timeout=10)
+        # Set proper User-Agent to comply with Wikimedia policy
+        headers = {
+            'User-Agent': 'NatureTrace/1.0 (flora.jiang1990@gmail.com)'
+        }
+        
+        response = requests.get(api_url, timeout=10, headers=headers)
         response.raise_for_status()
         
         data = response.json()
@@ -60,6 +65,14 @@ def fetch_inaturalist_observations(taxon_name="Canis lupus", limit=50):
             try:
                 taxon = observation.get("taxon", {})
                 
+                # Extract location data from observation
+                geojson = observation.get("geojson", {})
+                coordinates = geojson.get("coordinates", []) if geojson else []
+                latitude = coordinates[1] if len(coordinates) >= 2 else None
+                longitude = coordinates[0] if len(coordinates) >= 2 else None
+                location_string = observation.get("location", "")
+                place_guess = observation.get("place_guess", "")
+                
                 # Extract iNaturalist data
                 inaturalist_data = {
                     "category": taxon.get("iconic_taxon_name", ""),
@@ -71,7 +84,7 @@ def fetch_inaturalist_observations(taxon_name="Canis lupus", limit=50):
                 # Get Wikipedia data if URL exists
                 wikipedia_data = get_wikipedia_data(inaturalist_data["wikipedia_url"])
                 
-                # Combine all data
+                # Combine all data including location
                 combined_data = {
                     "filename": f"inaturalist_{taxon_name.replace(' ', '_')}_{i+1}.jpg",
                     "name": inaturalist_data["name"] or f"{taxon_name} observation {i+1}",
@@ -83,7 +96,11 @@ def fetch_inaturalist_observations(taxon_name="Canis lupus", limit=50):
                     "wikipedia_url": inaturalist_data["wikipedia_url"],
                     "original_image": wikipedia_data.get("original_image", ""),
                     "species": wikipedia_data.get("species", ""),
-                    "summary": wikipedia_data.get("summary", "")
+                    "summary": wikipedia_data.get("summary", ""),
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "location_string": location_string,
+                    "place_guess": place_guess
                 }
                 
                 observations.append(combined_data)
@@ -265,6 +282,14 @@ def fetch_diverse_animals_by_category():
                         if not common_name:
                             continue
                         
+                        # Extract location data from observation
+                        geojson = observation.get("geojson", {})
+                        coordinates = geojson.get("coordinates", []) if geojson else []
+                        latitude = coordinates[1] if len(coordinates) >= 2 else None
+                        longitude = coordinates[0] if len(coordinates) >= 2 else None
+                        location_string = observation.get("location", "")
+                        place_guess = observation.get("place_guess", "")
+                        
                         # Extract data
                         inaturalist_data = {
                             "category": taxon.get("iconic_taxon_name", category),
@@ -280,7 +305,7 @@ def fetch_diverse_animals_by_category():
                         safe_name = common_name.replace(" ", "_").replace("/", "_")
                         filename = f"diverse_{category.lower()}_{safe_name}_{i+1}.jpg"
                         
-                        # Combine all data
+                        # Combine all data including location
                         combined_data = {
                             "filename": filename,
                             "name": common_name,
@@ -292,7 +317,11 @@ def fetch_diverse_animals_by_category():
                             "wikipedia_url": inaturalist_data["wikipedia_url"],
                             "original_image": wikipedia_data.get("original_image", ""),
                             "species": wikipedia_data.get("species", ""),
-                            "summary": wikipedia_data.get("summary", "")
+                            "summary": wikipedia_data.get("summary", ""),
+                            "latitude": latitude,
+                            "longitude": longitude,
+                            "location_string": location_string,
+                            "place_guess": place_guess
                         }
                         
                         all_observations.append(combined_data)

@@ -12,7 +12,7 @@ class FreeSoundClient:
     
     def __init__(self):
         self.base_url = "https://freesound.org/apiv2"
-        self.api_key = st.secrets.get("free_sounds_key", "")
+        self.api_key = st.secrets.get("freesound_api_key", "")
         self.session = requests.Session()
         
         if self.api_key:
@@ -33,7 +33,7 @@ class FreeSoundClient:
             Direct download URL to the best matching sound, or None if not found
         """
         if not self.api_key:
-            logger.warning("FreeSound API key not configured")
+            logger.warning("FreeSound API key not configured - skipping FreeSound search")
             return None
             
         try:
@@ -55,6 +55,12 @@ class FreeSoundClient:
             if response.status_code == 200:
                 data = response.json()
                 sounds = data.get('results', [])
+            elif response.status_code == 401:
+                logger.error(f"FreeSound API authentication failed - invalid API key")
+                return None
+            else:
+                logger.error(f"FreeSound API error {response.status_code}: {response.text[:100]}")
+                return None
                 
                 if sounds:
                     # Score and rank sounds
@@ -142,6 +148,11 @@ class FreeSoundClient:
                     "success": True,
                     "username": user_data.get('username', 'Unknown'),
                     "message": "FreeSound API connection successful"
+                }
+            elif response.status_code == 401:
+                return {
+                    "success": False,
+                    "error": "Invalid API key - authentication failed"
                 }
             else:
                 return {
