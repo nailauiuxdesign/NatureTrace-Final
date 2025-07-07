@@ -117,3 +117,38 @@ venv.bak/
 # pyc files
 *.pyc
 __pycache__/
+
+# =============================================================================
+# NatureTrace Specific Files
+# =============================================================================
+
+# Secrets and API Keys
+.streamlit/secrets.toml
+secrets.toml
+*.env
+.env*
+
+# Large Model Files (handled by Git LFS)
+# *.pt files are tracked via LFS
+# *.pth
+# *.onnx
+
+# Temporary test outputs
+test_outputs/
+output/
+temp/
+tmp/
+
+# Data files (uncomment if needed)
+# data/
+# *.csv
+# *.json
+# *.xlsx
+
+# Streamlit cache
+.streamlit/
+!.streamlit/config.toml
+
+# OS specific
+.DS_Store
+Thumbs.db
