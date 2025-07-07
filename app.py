@@ -3,150 +3,32 @@
 import streamlit as st
 import pandas as pd
 import logging
+from urllib.parse import parse_qs
 from utils.image_utils import process_images, is_duplicate_image
 from utils.data_utils import save_to_snowflake, fetch_dashboard_data, update_animal_sound_enhanced
-from utils.map_utils import get_animal_habitat_map, get_interactive_map_with_controls, get_comprehensive_animal_map, get_category_statistics_map, get_simple_colored_map, get_actual_locations_map, get_location_enhanced_habitat_map
+from utils.map_utils import (
+    get_animal_habitat_map, get_interactive_map_with_controls,
+    get_comprehensive_animal_map, get_category_statistics_map,
+    get_simple_colored_map, get_actual_locations_map,
+    get_location_enhanced_habitat_map
+)
 from utils.llama_utils import generate_animal_facts, generate_description
-from utils.sound_utils import test_multiple_sound_sources, fetch_clean_animal_sound, prioritize_inaturalist_for_mammals
-from utils.enhanced_image_processing import enhanced_image_recognition, create_user_choice_interface, test_enhanced_recognition_pipeline
+from utils.sound_utils import (
+    test_multiple_sound_sources, fetch_clean_animal_sound,
+    prioritize_inaturalist_for_mammals
+)
+from utils.enhanced_image_processing import (
+    enhanced_image_recognition, create_user_choice_interface,
+    test_enhanced_recognition_pipeline
+)
 from utils.azure_vision import test_azure_connection
+from utils.category_utils import convert_category_name
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-st.set_page_config(page_title="NatureTrace - Animal Discovery Platform", layout="wide")
-
-# Add custom CSS for better URL-based navigation
-st.markdown("""
-<style>
-    .nav-helper {
-        background-color: #f0f2f6;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        border-left: 4px solid #1f77b4;
-    }
-    .url-display {
-        background-color: #e8f4f8;
-        padding: 8px;
-        border-radius: 3px;
-        font-family: monospace;
-        font-size: 12px;
-        color: #2c3e50;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Initialize session state for navigation
-if 'current_page' not in st.session_state:
-    st.session_state.current_page = "Home"
-
-# URL-based routing simulation
-# Check query params for routing
-query_params = st.query_params
-
-# Determine current page based on URL structure
-if 'page' in query_params:
-    if query_params['page'] == 'upload':
-        current_page = "Upload"
-    elif query_params['page'] == 'profile' and 'animal' in query_params:
-        current_page = "Animal Profile"
-        # Set the selected animal from URL
-        st.session_state.selected_animal = query_params['animal']
-    else:
-        current_page = "Home"
-else:
-    current_page = "Home"
-
-# Sidebar navigation with new structure
-page_options = ["🏠 Home (Dashboard)", "📤 Upload Images", "🐾 Animal Profile"]
-display_names = ["Home", "Upload", "Animal Profile"]
-
-# Find current index
-try:
-    current_index = display_names.index(current_page)
-except ValueError:
-    current_index = 0
-
-page_display = st.sidebar.radio("Navigate to", page_options, index=current_index)
-
-# Map display names back to internal names
-page_mapping = {
-    "🏠 Home (Dashboard)": "Home",
-    "📤 Upload Images": "Upload", 
-    "🐾 Animal Profile": "Animal Profile"
-}
-
-page = page_mapping[page_display]
-
-# Update query params based on selection
-if page == "Home":
-    st.query_params.clear()
-elif page == "Upload":
-    st.query_params.page = "upload"
-elif page == "Animal Profile":
-    st.query_params.page = "profile"
-    if 'selected_animal' in st.session_state and st.session_state.selected_animal:
-        st.query_params.animal = st.session_state.selected_animal
-
-# Update current page in session state
-st.session_state.current_page = page
-
-# Display current URL structure for user reference
-if page != "Home":
-    url_parts = []
-    if page == "Upload":
-        url_parts = ["🏠 Home", "📤 Upload"]
-        current_url = "?page=upload"
-    elif page == "Animal Profile" and 'selected_animal' in st.session_state:
-        url_parts = ["🏠 Home", f"🐾 {st.session_state.selected_animal}"]
-        current_url = f"?page=profile&animal={st.session_state.selected_animal}"
-    else:
-        url_parts = ["🏠 Home"]
-        current_url = "/"
-    
-    # Breadcrumb navigation
-    breadcrumb = " → ".join(url_parts)
-    st.markdown(f"""
-    <div class="nav-helper">
-        <strong>📍 You are here:</strong> {breadcrumb}
-        <br><small class="url-display">URL: {current_url}</small>
-    </div>
-    """, unsafe_allow_html=True)
-
-# Quick navigation bar
-st.markdown("---")
-col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
-
-with col1:
-    if st.button("🏠 Home Dashboard", use_container_width=True):
-        st.query_params.clear()
-        st.session_state.current_page = "Home"
-        st.rerun()
-
-with col2:
-    if st.button("📤 Upload Images", use_container_width=True):
-        st.query_params.page = "upload"
-        st.session_state.current_page = "Upload"
-        st.rerun()
-
-with col3:
-    profile_disabled = not st.session_state.get('selected_animal')
-    if st.button("🐾 Current Profile", use_container_width=True, disabled=profile_disabled):
-        if st.session_state.get('selected_animal'):
-            st.query_params.page = "profile"
-            st.query_params.animal = st.session_state.selected_animal
-            st.session_state.current_page = "Animal Profile"
-            st.rerun()
-
-with col4:
-    if st.button("🔄 Refresh Page", use_container_width=True):
-        st.rerun()
-
-st.markdown("---")
-
-if page == "Upload":
-    st.title("🦁 Animal Insight - Discover & Explore")
+def show_upload_page():
+    st.title("➕ Upload New Animals")
     st.markdown("Upload up to 5 animal images to identify them and explore their world.")
     
     # Enhanced features notification
@@ -266,10 +148,7 @@ if page == "Upload":
                             analysis = recognition_result.get('analysis_summary', {})
                             if analysis.get('azure_predictions', 0) > 0:
                                 st.info(f"🔍 AI model prediction confirmed by Azure Computer Vision analysis")
-                            
-                            # Store final choice for saving
-                            recognition_result['final_choice'] = final_pred
-                            
+                        
                         elif recommendation == 'azure_preferred':
                             # Azure result preferred
                             final_pred = recognition_result['final_prediction']
@@ -278,9 +157,6 @@ if page == "Upload":
                             st.write(f"**Type:** *{final_pred['type']}*")
                             st.write(f"**Description:** {final_pred['description']}")
                             st.write(f"**AI Model also suggested:** {recognition_result['ai_result']['name']}")
-                            
-                            # Store final choice for saving
-                            recognition_result['final_choice'] = final_pred
                             
                         else:
                             # User choice required
@@ -354,7 +230,7 @@ if page == "Upload":
                                 add_status_text.text(f"🔊 Finalizing sound data...")
                                 
                                 add_progress_bar.progress(100)
-                                add_status_text.text(f"✅ Complete!")
+                                add_status_text.text(f"✅ Complete!");
                                 
                                 if result and result.get('success'):
                                     # Show comprehensive success message with details
@@ -443,13 +319,19 @@ if page == "Upload":
             with summary_col4:
                 st.metric("🚫 Duplicates", total_duplicates)
 
-elif page == "Home":
+def show_home_page():
     st.title("📊 Animal Dashboard & Interactive Map")
     
-    df = fetch_dashboard_data()
+    try:
+        df = fetch_dashboard_data()
+    except Exception as e:
+        st.error(f"Error fetching dashboard data: {str(e)}")
+        st.info("Please check your database connection or try uploading some animals first.")
+        return
 
     if df.empty:
         st.info("No data available yet. Upload animals to populate the dashboard.")
+        return
     else:
         # Check column names (handle both NAME and name)
         name_col = 'NAME' if 'NAME' in df.columns else 'name'
@@ -461,8 +343,8 @@ elif page == "Home":
         if category_col in df.columns:
             categories.extend(sorted(df[category_col].dropna().unique()))
         
-        # Category selector for map filtering
-        st.subheader("🗺️ Global Animal Habitat Map")
+        # Category selector for map filtering,
+        st.markdown('### <i class="fas fa-globe"></i> Global Animal Habitat Map', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([2, 1, 1])
         
         with col1:
@@ -515,8 +397,6 @@ elif page == "Home":
                         if category_col in df.columns:
                             valid_locations = valid_locations[valid_locations[category_col] == selected_category]
                     
-                    st.success(f"🎯 Interactive GPS map loaded! Showing {len(valid_locations)} animals with actual location data.")
-                    
                 except Exception as e:
                     st.warning("🔄 GPS map unavailable, loading habitat overview...")
                     # Fallback to habitat-based map
@@ -556,16 +436,14 @@ elif page == "Home":
                         st.error("Could not generate map. Please check your internet connection.")
         
         # Add map interaction info
-        if selected_category == "All Categories":
-            st.info("🎨 **Map Legend:** Each color represents a different animal category. Zoom in to explore specific conservation areas and habitats!")
-        else:
+        if selected_category != "All Categories":
             filtered_count = len(df[df[category_col] == selected_category]) if category_col in df.columns else 0
             st.info(f"🔍 **Filtered View:** Showing habitats for {filtered_count} {selected_category.lower()} animals. Switch to 'All Categories' to see the full map.")
         
         st.markdown("---")
         
         # Animal Dashboard Section
-        st.subheader("🐾 Your Animal Collection")
+        st.markdown('### <i class="fas fa-paw"></i> Your Animal Collection', unsafe_allow_html=True)
         
         # Layout options
         col1, col2 = st.columns([3, 1])
@@ -584,6 +462,12 @@ elif page == "Home":
         # Filter animals based on selected category
         display_df = df if selected_category == "All Categories" else df[df[category_col] == selected_category] if category_col in df.columns else df
         
+        # Check if we have any data to display
+        if display_df.empty:
+            st.info(f"No animals found in category: {selected_category}")
+            return
+            
+        # Display content based on view mode
         if view_mode == "Category Tabs":
             # Group animals by category
             if category_col in df.columns:
@@ -591,12 +475,13 @@ elif page == "Home":
                 
                 # Create tabs for each category
                 if len(all_categories) > 0:
-                    tabs = st.tabs([f"🦁 {cat} ({len(df[df[category_col] == cat])})" for cat in sorted(all_categories)] + ["📊 All Data"])
+                    # Use imported convert_category_name function
+                    tabs = st.tabs([f"{convert_category_name(cat)} ({len(df[df[category_col] == cat])})" for cat in sorted(all_categories)])
                     
                     # Category tabs
                     for i, category in enumerate(sorted(all_categories)):
                         with tabs[i]:
-                            st.subheader(f"{category} Animals")
+                            st.subheader(f"{convert_category_name(category)}")
                             category_animals = df[df[category_col] == category]
                             
                             # Create animal cards in columns
@@ -604,76 +489,35 @@ elif page == "Home":
                             for idx, (_, animal) in enumerate(category_animals.iterrows()):
                                 with cols[idx % 3]:
                                     animal_name = animal.get(name_col, 'Unknown')
+                                    animal_category = animal.get(category_col, 'Other')
                                     
-                                    # Animal card with category color
-                                    category_colors = {
-                                        'Bird': '#FF6B6B', 'Mammal': '#4ECDC4', 'Reptile': '#45B7D1', 
-                                        'Amphibian': '#96CEB4', 'Fish': '#FECA57', 'Insect': '#FF9FF3', 
-                                        'Arachnid': '#54A0FF', 'Other': '#9C88FF'
-                                    }
-                                    card_color = category_colors.get(category, '#9C88FF')
-                                    
+                                    # Create animal card
                                     with st.container():
-                                        st.markdown(f"""
-                                        <div style="border-left: 4px solid {card_color}; padding-left: 10px; margin-bottom: 20px;">
-                                            <h4 style="color: {card_color}; margin: 0;">🐾 {animal_name}</h4>
-                                        </div>
-                                        """, unsafe_allow_html=True)
+                                        st.markdown(f"### {animal_name}")
                                         
-                                        # Show image if available
+                                        # Display image if available
                                         if 'INATURAL_PIC' in animal and pd.notna(animal['INATURAL_PIC']):
                                             try:
-                                                st.image(animal['INATURAL_PIC'], width=200)
+                                                st.image(animal['INATURAL_PIC'], width=290)
                                             except:
                                                 st.write("📷 Image not available")
+                                        else:
+                                            st.write("📷 No image available")
                                         
-                                        # Basic info
-                                        if 'DESCRIPTION' in animal and pd.notna(animal['DESCRIPTION']):
-                                            st.write(f"**Description:** {str(animal['DESCRIPTION'])[:100]}...")
+                                        # Show species if available
+                                        if 'SPECIES' in animal and pd.notna(animal['SPECIES']):
+                                            st.write(f"**Species:** {animal['SPECIES']}")
                                         
-                                        # Action buttons
-                                        btn_col1, btn_col2 = st.columns(2)
-                                        with btn_col1:
-                                            if st.button(f"View Profile", key=f"profile_tab_{animal_name}_{idx}"):
-                                                st.session_state.selected_animal = animal_name
-                                                st.session_state.animal_data = animal.to_dict()
-                                                st.query_params.page = "profile"
-                                                st.query_params.animal = animal_name
-                                                st.session_state.current_page = "Animal Profile"
-                                                st.rerun()
-                                        
-                                        with btn_col2:
-                                            if st.button(f"Show on Map", key=f"map_tab_{animal_name}_{idx}"):
-                                                # Show enhanced individual animal map with actual locations
-                                                with st.spinner(f"Loading {animal_name} locations..."):
-                                                    enhanced_map = get_location_enhanced_habitat_map(animal_name, df)
-                                                    if enhanced_map:
-                                                        st.components.v1.html(enhanced_map, height=400)
-                                                    else:
-                                                        # Fallback to original habitat map
-                                                        individual_map = get_interactive_map_with_controls(animal_name)
-                                                        if individual_map:
-                                                            st.components.v1.html(individual_map, height=400)
-                    
-                    # All data tab
-                    with tabs[-1]:
-                        st.subheader("Complete Animal Database")
-                        st.dataframe(df, use_container_width=True)
-                        
-                        # Statistics
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.write("**Animals by Name (Top 10)**")
-                            st.bar_chart(df[name_col].value_counts().head(10))
-                        with col2:
-                            if category_col in df.columns:
-                                st.write("**Animals by Category**")
-                                st.bar_chart(df[category_col].value_counts())
+                                        # View button
+                                        if st.button(f"View Profile", key=f"tab_{category}_{animal_name}_{idx}", use_container_width=True):
+                                            st.session_state.selected_animal = animal_name
+                                            st.session_state.animal_data = animal.to_dict()
+                                            st.query_params["page"] = "profile"
+                                            st.query_params["animal"] = animal_name
+                                            st.rerun()
                 else:
                     st.info("No categories found in the data.")
-            else:
-                st.info("No category information available.")
-        
+
         elif view_mode == "Grid View":
             # Grid layout for all animals
             st.subheader(f"Grid View - {len(display_df)} Animals" + (f" ({selected_category})" if selected_category != "All Categories" else ""))
@@ -684,19 +528,30 @@ elif page == "Home":
                     animal_name = animal.get(name_col, 'Unknown')
                     animal_category = animal.get(category_col, 'Other')
                     
-                    # Color coding
+                    # Color coding with updated English categories
                     category_colors = {
-                        'Bird': '#FF6B6B', 'Mammal': '#4ECDC4', 'Reptile': '#45B7D1', 
-                        'Amphibian': '#96CEB4', 'Fish': '#FECA57', 'Insect': '#FF9FF3', 
-                        'Arachnid': '#54A0FF', 'Other': '#9C88FF'
+                        'Birds': '#FF6B6B',
+                        'Mammals': '#4ECDC4',
+                        'Reptiles': '#45B7D1',
+                        'Amphibians': '#96CEB4',
+                        'Ray-Finned Fish': '#FECA57',
+                        'Cartilaginous Fish': '#45B7D1',
+                        'Insects': '#FF9FF3',
+                        'Arachnids': '#54A0FF',
+                        'Crustaceans': '#FFB6C1',
+                        'Mollusks': '#DDA0DD',
+                        'Animals': '#9C88FF',
+                        'Other': '#9C88FF'
                     }
+                    # Convert category to English before getting color
+                    english_category = convert_category_name(animal_category)
                     card_color = category_colors.get(animal_category, '#9C88FF')
                     
                     with st.container():
                         st.markdown(f"""
                         <div style="border: 2px solid {card_color}; border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 15px;">
                             <div style="background: {card_color}; color: white; margin: -10px -10px 10px -10px; padding: 8px; border-radius: 8px 8px 0 0;">
-                                <strong>{animal_category}</strong>
+                                <strong>{english_category}</strong>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -705,18 +560,19 @@ elif page == "Home":
                         
                         if 'INATURAL_PIC' in animal and pd.notna(animal['INATURAL_PIC']):
                             try:
-                                st.image(animal['INATURAL_PIC'], width=150)
+                                st.image(animal['INATURAL_PIC'], width=290)
                             except:
-                                st.write("📷 No image")
-                        
+                                st.write("📷 Image not available")
+                        else:
+                            st.write("📷 No image available")
+
                         if st.button(f"View", key=f"grid_{animal_name}_{idx}", use_container_width=True):
                             st.session_state.selected_animal = animal_name
                             st.session_state.animal_data = animal.to_dict()
-                            st.query_params.page = "profile"
-                            st.query_params.animal = animal_name
-                            st.session_state.current_page = "Animal Profile"
+                            st.query_params["page"] = "profile"
+                            st.query_params["animal"] = animal_name
                             st.rerun()
-        
+
         else:  # List View
             st.subheader(f"List View - {len(display_df)} Animals" + (f" ({selected_category})" if selected_category != "All Categories" else ""))
             
@@ -726,9 +582,14 @@ elif page == "Home":
                 
                 # Color coding for list items
                 category_colors = {
-                    'Bird': '#FF6B6B', 'Mammal': '#4ECDC4', 'Reptile': '#45B7D1', 
-                    'Amphibian': '#96CEB4', 'Fish': '#FECA57', 'Insect': '#FF9FF3', 
-                    'Arachnid': '#54A0FF', 'Other': '#9C88FF'
+                    'Bird': '#FF6B6B',
+                    'Mammal': '#4ECDC4',
+                    'Reptile': '#45B7D1',
+                    'Amphibian': '#96CEB4',
+                    'Fish': '#FECA57',
+                    'Insect': '#FF9FF3',
+                    'Arachnid': '#54A0FF',
+                    'Other': '#9C88FF'
                 }
                 card_color = category_colors.get(animal_category, '#9C88FF')
                 
@@ -743,39 +604,45 @@ elif page == "Home":
                     """, unsafe_allow_html=True)
                 
                 with col2:
-                    st.write(f"**Category:** {animal_category}")
+                    st.write(f"**Category:** {convert_category_name(animal_category)}")
                 
                 with col3:
-                    if 'DESCRIPTION' in animal and pd.notna(animal['DESCRIPTION']):
-                        st.write(f"{str(animal['DESCRIPTION'])[:50]}...")
+                    if 'SPECIES' in animal and pd.notna(animal['SPECIES']):
+                        st.write(f"**Species:** {animal['SPECIES']}")
                 
                 with col4:
-                    if st.button("View", key=f"list_{animal_name}_{idx}"):
+                    if st.button(f"View", key=f"list_{animal_name}_{idx}"):
                         st.session_state.selected_animal = animal_name
                         st.session_state.animal_data = animal.to_dict()
-                        st.query_params.page = "profile"
-                        st.query_params.animal = animal_name
-                        st.session_state.current_page = "Animal Profile"
+                        st.query_params["page"] = "profile"
+                        st.query_params["animal"] = animal_name
                         st.rerun()
                 
                 st.markdown("---")
 
-elif page == "Animal Profile":
+def show_profile_page():
     st.title("🐾 Animal Profile")
     
     # Auto-load animal data from URL if available
+    query_params = st.query_params
     if 'animal' in query_params and query_params['animal']:
         url_animal = query_params['animal']
         if (not st.session_state.get('selected_animal') or 
             st.session_state.get('selected_animal') != url_animal):
             # Load animal data from database based on URL parameter
-            df = fetch_dashboard_data()
-            if not df.empty:
-                name_col = 'NAME' if 'NAME' in df.columns else 'name'
-                animal_row = df[df[name_col].str.lower() == url_animal.lower()]
-                if not animal_row.empty:
-                    st.session_state.selected_animal = url_animal
-                    st.session_state.animal_data = animal_row.iloc[0].to_dict()
+            try:
+                df = fetch_dashboard_data()
+                if not df.empty:
+                    name_col = 'NAME' if 'NAME' in df.columns else 'name'
+                    if name_col in df.columns:
+                        animal_row = df[df[name_col].str.lower() == url_animal.lower()]
+                        if not animal_row.empty:
+                            st.session_state.selected_animal = url_animal
+                            st.session_state.animal_data = animal_row.iloc[0].to_dict()
+                    else:
+                        st.warning("No name column found in database.")
+            except Exception as e:
+                st.error(f"Error loading animal data: {str(e)}")
     
     # Check if an animal is selected
     if 'selected_animal' not in st.session_state or not st.session_state.selected_animal:
@@ -895,13 +762,13 @@ elif page == "Animal Profile":
                                 with col2:
                                     st.metric("Speech Content", f"{analysis['speech_ratio']:.1%}")
                                     st.metric("Quality Score", f"{analysis['quality_score']:.0f}/100")
-                                
-                                if analysis['recommended']:
-                                    st.success("🎯 High quality animal sound!")
-                                elif analysis['speech_ratio'] > 0.3:
-                                    st.warning("⚠️ Contains human speech - processed to remove it")
-                                else:
-                                    st.info("✨ Clean natural sound")
+                        
+                        if analysis['recommended']:
+                            st.success("🎯 High quality animal sound!")
+                        elif analysis['speech_ratio'] > 0.3:
+                            st.warning("⚠️ Contains human speech - processed to remove it")
+                        else:
+                            st.info("✨ Clean natural sound")
                         
                         # Play the processed audio
                         if result.get('processed_url'):
@@ -912,31 +779,31 @@ elif page == "Animal Profile":
                                 st.success("🧹 Human speech removed from this recording")
                             else:
                                 st.info("🔊 Original clean recording")
-                            
-                            # Show comparison if speech was removed
-                            if (result.get('original_url') != result.get('processed_url') and 
-                                result.get('speech_removed')):
-                                with st.expander("🔀 Compare with Original", expanded=False):
-                                    st.write("**Original (with human speech):**")
-                                    st.audio(result['original_url'])
-                                    st.write("**Processed (speech removed):**")
-                                    st.audio(result['processed_url'])
-                            
-                            # Update database button
-                            if st.button("💾 Save This Sound"):
-                                with st.spinner("Updating database..."):
-                                    # Save the processed/clean URL with enhanced tracking
-                                    update_result = update_animal_sound_enhanced(
-                                        animal_name=animal_name,
-                                        sound_url=result['processed_url'],
-                                        source=result.get('source', 'Unknown'),
-                                        processed=result.get('speech_removed', False)
-                                    )
-                                    if update_result and update_result.get('success'):
-                                        st.success("✅ Clean sound saved to database!")
-                                        st.rerun()
-                                    else:
-                                        st.error("❌ Failed to save sound")
+                        
+                        # Show comparison if speech was removed
+                        if (result.get('original_url') != result.get('processed_url') and 
+                            result.get('speech_removed')):
+                            with st.expander("🔀 Compare with Original", expanded=False):
+                                st.write("**Original (with human speech):**")
+                                st.audio(result['original_url'])
+                                st.write("**Processed (speech removed):**")
+                                st.audio(result['processed_url'])
+                        
+                        # Update database button
+                        if st.button("💾 Save This Sound"):
+                            with st.spinner("Updating database..."):
+                                # Save the processed/clean URL with enhanced tracking
+                                update_result = update_animal_sound_enhanced(
+                                    animal_name=animal_name,
+                                    sound_url=result['processed_url'],
+                                    source=result.get('source', 'Unknown'),
+                                    processed=result.get('speech_removed', False)
+                                )
+                                if update_result and update_result.get('success'):
+                                    st.success("✅ Clean sound saved to database!")
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Failed to save sound")
                     else:
                         st.error(f"❌ {result.get('message', 'No sounds found')}")
                         
@@ -976,3 +843,207 @@ elif page == "Animal Profile":
             st.write("- [Xeno-Canto](https://xeno-canto.org) (Bird sounds)")
             st.write("- [Internet Archive](https://archive.org) (Various animals)")
             st.write("- [Freesound](https://freesound.org) (Creative Commons sounds)")
+
+def show_map_page():
+    st.title("🗺️ Animal Locations")
+    st.markdown("Explore where different animals have been spotted and their natural habitats.")
+    
+    map_type = st.selectbox(
+        "Select Map Type",
+        ["Actual Locations", "Habitat Map", "Category Statistics", "Interactive Map", "Comprehensive Map"]
+    )
+    
+    if map_type == "Actual Locations":
+        get_actual_locations_map()
+    elif map_type == "Habitat Map":
+        get_animal_habitat_map()
+    elif map_type == "Category Statistics":
+        get_category_statistics_map()
+    elif map_type == "Interactive Map":
+        get_interactive_map_with_controls()
+    else:
+        get_comprehensive_animal_map()
+
+def show_analytics_page():
+    st.title("📊 Analytics Dashboard")
+    st.markdown("View insights and statistics about recorded animals.")
+    
+    # Fetch dashboard data
+    try:
+        data = fetch_dashboard_data()
+    except Exception as e:
+        st.error(f"Error fetching dashboard data: {str(e)}")
+        st.info("Please check your database connection or try uploading some animals first.")
+        return
+    
+    if data.empty:
+        st.info("No data available yet. Upload animals to populate the analytics dashboard.")
+        return
+    
+    # Check column names (handle both uppercase and lowercase)
+    name_col = 'NAME' if 'NAME' in data.columns else 'name'
+    category_col = 'CATEGORY' if 'CATEGORY' in data.columns else 'category'
+    species_col = 'SPECIES' if 'SPECIES' in data.columns else 'species'
+    date_col = 'DATE' if 'DATE' in data.columns else 'date'
+    
+    # Display overall statistics
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Total Animals", len(data))
+    
+    with col2:
+        if species_col in data.columns:
+            unique_species = data[species_col].dropna().nunique()
+            st.metric("Unique Species", unique_species)
+        else:
+            st.metric("Unique Species", "N/A")
+    
+    with col3:
+        if category_col in data.columns:
+            unique_categories = data[category_col].dropna().nunique()
+            st.metric("Categories", unique_categories)
+        else:
+            st.metric("Categories", "N/A")
+    
+    # Category distribution
+    if category_col in data.columns:
+        st.subheader("Category Distribution")
+        category_counts = data[category_col].value_counts()
+        if not category_counts.empty:
+            st.bar_chart(category_counts)
+        else:
+            st.info("No category data available to display.")
+    else:
+        st.warning("No category column found in the data.")
+    
+    # Species distribution
+    if species_col in data.columns:
+        st.subheader("Species Distribution")
+        species_counts = data[species_col].dropna().value_counts().head(10)  # Top 10 species
+        if not species_counts.empty:
+            st.bar_chart(species_counts)
+        else:
+            st.info("No species data available to display.")
+    
+    # Data quality overview
+    st.subheader("📋 Data Overview")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Available Columns:**")
+        available_cols = list(data.columns)
+        for col in available_cols:
+            non_null_count = data[col].count()
+            total_count = len(data)
+            percentage = (non_null_count / total_count) * 100 if total_count > 0 else 0
+            st.write(f"- **{col}:** {non_null_count}/{total_count} ({percentage:.1f}% complete)")
+    
+    with col2:
+        st.write("**Data Summary:**")
+        if name_col in data.columns:
+            st.write(f"**Animals:** {data[name_col].nunique()} unique names")
+        
+        # Check for image data
+        image_col = 'INATURAL_PIC' if 'INATURAL_PIC' in data.columns else 'image'
+        if image_col in data.columns:
+            images_count = data[image_col].dropna().count()
+            st.write(f"**Images:** {images_count} animals with images")
+        
+        # Check for location data
+        lat_col = 'LATITUDE' if 'LATITUDE' in data.columns else 'latitude'
+        lng_col = 'LONGITUDE' if 'LONGITUDE' in data.columns else 'longitude'
+        if lat_col in data.columns and lng_col in data.columns:
+            location_count = data.dropna(subset=[lat_col, lng_col]).shape[0]
+            st.write(f"**Locations:** {location_count} animals with GPS coordinates")
+        
+        # Check for sound data
+        sound_col = 'SOUND_URL' if 'SOUND_URL' in data.columns else 'sound_url'
+        if sound_col in data.columns:
+            sounds_count = data[sound_col].dropna().count()
+            st.write(f"**Sounds:** {sounds_count} animals with audio")
+    
+    # Recent additions (if date column exists)
+    if date_col in data.columns:
+        st.subheader("📅 Recent Activity")
+        try:
+            # Convert date column to datetime if it's not already
+            data[date_col] = pd.to_datetime(data[date_col], errors='coerce')
+            recent_data = data.dropna(subset=[date_col]).sort_values(date_col, ascending=False).head(5)
+            
+            if not recent_data.empty:
+                st.write("**Last 5 Animals Added:**")
+                for _, animal in recent_data.iterrows():
+                    animal_name = animal.get(name_col, 'Unknown')
+                    animal_date = animal[date_col].strftime('%Y-%m-%d') if pd.notna(animal[date_col]) else 'Unknown date'
+                    animal_category = animal.get(category_col, 'Unknown category')
+                    st.write(f"- **{animal_name}** ({animal_category}) - {animal_date}")
+            else:
+                st.info("No recent activity data available.")
+        except Exception as e:
+            st.warning(f"Could not process date information: {str(e)}")
+    else:
+        st.info("No date column found for tracking recent activity.")
+
+def main():
+    st.set_page_config(page_title="NatureTrace - Animal Discovery Platform", layout="wide")
+
+    # Initialize session state for page navigation
+    if 'page' not in st.session_state:
+        st.session_state.page = 'Home'
+
+    # Add custom CSS
+    st.markdown("""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .nav-helper {
+            background-color: #f0f2f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border-left: 4px solid #1f77b4;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Sidebar navigation
+    with st.sidebar:
+        st.title("🦁 NatureTrace")
+        st.markdown("---")
+        
+        # Navigation buttons
+        pages = {
+            "Home": "🏠",
+            "Upload": "➕",
+            "Profile": "🐾",
+            "Map": "🗺️",
+            "Analytics": "📊"
+        }
+        
+        for page_name, icon in pages.items():
+            if st.button(f"{icon} {page_name}", use_container_width=True):
+                st.session_state.page = page_name
+                st.rerun()
+        
+        st.markdown("---")
+        st.markdown("### About")
+        st.info("""
+        🌟 **NatureTrace**
+        Discover and track wildlife with AI-powered recognition and interactive mapping.
+        """)
+
+    # Display the selected page
+    if st.session_state.page == "Upload":
+        show_upload_page()
+    elif st.session_state.page == "Profile":
+        show_profile_page()
+    elif st.session_state.page == "Map":
+        show_map_page()
+    elif st.session_state.page == "Analytics":
+        show_analytics_page()
+    else:  # Home is the default
+        show_home_page()
+
+if __name__ == "__main__":
+    main()

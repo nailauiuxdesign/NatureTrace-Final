@@ -1,0 +1,29 @@
+Step-by-step instructions to install Git on Windows and configure it for use in VS Code:
+
+1. Download Git for Windows:
+   - Visit https://git-scm.com/download/win
+   - The download should start automatically.
+
+2. Run the Installer:
+   - Open the downloaded installer file.
+   - Follow the setup wizard steps.
+
+3. Important Setup Options:
+   - When prompted, select "Use Git from the Windows Command Prompt" or "Git from the command line and also from 3rd-party software" to add Git to your system PATH.
+   - Choose your preferred editor (VS Code is recommended).
+   - Leave other options as default unless you have specific preferences.
+
+4. Complete Installation:
+   - Finish the installation and close the installer.
+
+5. Verify Git Installation:
+   - Open a new Command Prompt or PowerShell window.
+   - Run the command: git --version
+   - You should see the installed Git version printed.
+
+6. Use Git in VS Code:
+   - Restart VS Code to ensure it picks up the updated PATH.
+   - Open the integrated terminal in VS Code.
+   - Run your git commands, e.g., git pull origin "flora/space".
+
+If you encounter any issues, please let me know.
