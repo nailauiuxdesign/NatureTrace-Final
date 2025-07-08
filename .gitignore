@@ -148,6 +148,8 @@ tmp/
 # Streamlit cache
 .streamlit/
 !.streamlit/config.toml
+!.streamlit/secrets.toml.example
+!.streamlit/README.md
 
 # OS specific
 .DS_Store
