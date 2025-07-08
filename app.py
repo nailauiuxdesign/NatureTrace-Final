@@ -343,7 +343,7 @@ def show_home_page():
         if category_col in df.columns:
             categories.extend(sorted(df[category_col].dropna().unique()))
         
-        # Category selector for map filtering,comment
+        # Category selector for map filtering,comment,
         st.markdown('### <i class="fas fa-globe"></i> Global Animal Habitat Map', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([2, 1, 1])
         
