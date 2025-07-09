@@ -1431,6 +1431,8 @@ def main():
             display: flex;
             gap: 4px;
             align-items: center;
+            position: relative;
+            z-index: 1002;
         }
         
         /* Individual navigation items */
@@ -1448,6 +1450,11 @@ def main():
             margin: 0 2px;
             white-space: nowrap;
             user-select: none;
+            position: relative;
+            z-index: 1002;
+            pointer-events: auto;
+            width: 125px;
+            text-align: center;
         }
         
         .nav-item:hover {
@@ -1642,15 +1649,80 @@ def main():
     
     <script>
         function navigateToPage(page) {{
-            // Find and click the corresponding Streamlit button
-            const buttons = document.querySelectorAll('button');
-            for (let button of buttons) {{
-                if (button.textContent.trim() === page) {{
-                    button.click();
-                    break;
+            console.log('Navigating to page:', page);
+            
+            // Try multiple approaches to ensure navigation works
+            let attempts = 0;
+            const maxAttempts = 5;
+            
+            function tryNavigation() {{
+                attempts++;
+                console.log(`Navigation attempt #${{attempts}} for page: ${{page}}`);
+                
+                // Find buttons that contain the exact page name
+                const buttons = Array.from(document.querySelectorAll('button'));
+                console.log('Found buttons:', buttons.map(btn => btn.textContent.trim()));
+                
+                // First try exact match
+                let targetButton = buttons.find(btn => {{
+                    const buttonText = btn.textContent.trim();
+                    return buttonText === page;
+                }});
+                
+                // If no exact match, try specific mappings
+                if (!targetButton) {{
+                    targetButton = buttons.find(btn => {{
+                        const buttonText = btn.textContent.trim();
+                        return (page === 'Location Map' && buttonText === 'Location Map') ||
+                               (page === 'Profiles' && buttonText === 'Profiles') ||
+                               (page === 'Dashboard' && buttonText === 'Dashboard') ||
+                               (page === 'Analytics' && buttonText === 'Analytics') ||
+                               (page === 'About' && buttonText === 'About') ||
+                               (page === 'Home' && buttonText === 'Home');
+                    }});
+                }}
+                
+                if (targetButton) {{
+                    console.log('Found target button:', targetButton.textContent.trim());
+                    targetButton.click();
+                    return true;
+                }} else if (attempts < maxAttempts) {{
+                    console.log('Button not found, retrying in 300ms...');
+                    setTimeout(tryNavigation, 300);
+                    return false;
+                }} else {{
+                    console.log('Max attempts reached, trying fallback');
+                    // Final fallback: try to find any button with similar text
+                    const fallbackButton = buttons.find(btn => 
+                        btn.textContent.trim().toLowerCase().includes(page.toLowerCase())
+                    );
+                    if (fallbackButton) {{
+                        console.log('Found fallback button:', fallbackButton.textContent.trim());
+                        fallbackButton.click();
+                        return true;
+                    }} else {{
+                        console.log('No button found for page:', page);
+                        return false;
+                    }}
                 }}
             }}
+            
+            // Start navigation attempts
+            setTimeout(tryNavigation, 100);
         }}
+        
+        // Initialize navigation when page loads
+        document.addEventListener('DOMContentLoaded', function() {{
+            console.log('DOM loaded, initializing navigation');
+            
+            // Ensure navigation items are clickable
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {{
+                item.style.pointerEvents = 'auto';
+                item.style.cursor = 'pointer';
+                console.log('Initialized nav item:', item.textContent.trim());
+            }});
+        }});
         
         // Also handle the existing modal functions
         function openModal(imageSrc, animalName) {{
@@ -1728,9 +1800,9 @@ def main():
             position: absolute;
             top: 12px;
             right: 24px;
-            z-index: 1000;
+            z-index: 999;
             opacity: 0;
-            pointer-events: auto;
+            pointer-events: none;
             height: 48px;
             width: auto;
             display: flex;
@@ -1756,6 +1828,8 @@ def main():
             font-size: 1px;
             border-radius: 25px;
             padding: 10px 18px;
+            pointer-events: auto;
+            z-index: 1000;
         }}
         
         /* Special width for Location Map button */
@@ -1764,99 +1838,102 @@ def main():
         }}
         
         /* Ensure the HTML navigation items are clickable and functional */
-        .nav-item {
+        .nav-item {{
             cursor: pointer;
             position: relative;
             z-index: 1001;
             pointer-events: auto;
-        }
+        }}
         
         /* Main content area with 200px margins on left and right */
-        .main .block-container {
+        .main .block-container {{
             padding-top: 1rem;
             padding-left: 200px !important;
             padding-right: 200px !important;
             max-width: 100% !important;
-        }
+        }}
         
         /* Responsive design - reduce margins on smaller screens */
-        @media (max-width: 1400px) {
-            .main .block-container {
+        @media (max-width: 1400px) {{
+            .main .block-container {{
                 padding-left: 130px !important;
                 padding-right: 130px !important;
-            }
-        }
+            }}
+        }}
         
-        @media (max-width: 1200px) {
-            .main .block-container {
+        @media (max-width: 1200px) {{
+            .main .block-container {{
                 padding-left: 80px !important;
                 padding-right: 80px !important;
-            }
-        }
+            }}
+        }}
         
-        @media (max-width: 768px) {
-            .nav-menu {
+        @media (max-width: 768px) {{
+            .nav-menu {{
                 flex-wrap: wrap;
                 gap: 2px;
-            }
+            }}
             
-            .nav-item {
+            .nav-item {{
                 padding: 8px 12px;
                 font-size: 12px;
-            }
+                width: 125px;
+                text-align: center;
+            }}
             
-            .logo {
+            .logo {{
                 font-size: 22px;
-            }
+            }}
             
-            .main .block-container {
+            .main .block-container {{
                 padding-left: 40px !important;
                 padding-right: 40px !important;
-            }
+            }}
             
-            .stContainer:has([data-testid="column"]) .stButton > button {
+            .stContainer:has([data-testid="column"]) .stButton > button {{
                 width: 70px;
                 padding: 8px 12px;
-            }
+            }}
             
-            .stContainer:has([data-testid="column"]) .stButton:nth-child(5) > button {
+            .stContainer:has([data-testid="column"]) .stButton:nth-child(5) > button {{
                 width: 85px;
-            }
+            }}
+        }}
         
-        @media (max-width: 640px) {
-            .top-nav {
+        @media (max-width: 640px) {{
+            .top-nav {{
                 flex-direction: column;
                 padding: 8px 16px;
                 gap: 8px;
-            }
+            }}
             
-            .nav-menu {
+            .nav-menu {{
                 justify-content: center;
                 width: 100%;
-            }
+            }}
             
-            .main .block-container {
+            .main .block-container {{
                 padding-left: 15px !important;
                 padding-right: 15px !important;
-            }
+            }}
             
-            .stContainer:has([data-testid="column"]) {
+            .stContainer:has([data-testid="column"]) {{
                 position: relative;
                 top: auto;
                 right: auto;
                 width: 100%;
                 justify-content: center;
-            }
-        }
+            }}
+        }}
         
         /* Ensure navigation works on all screen sizes */
-        .stContainer:has([data-testid="column"]) {
+        .stContainer:has([data-testid="column"]) {{
             pointer-events: auto;
-        }
+        }}
         
-        .stContainer:has([data-testid="column"]) .stButton > button {
+        .stContainer:has([data-testid="column"]) .stButton > button {{
             pointer-events: auto;
-        }
+        }}
     </style>
     """, unsafe_allow_html=True)
     
