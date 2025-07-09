@@ -1,4 +1,4 @@
-# 🌿 NatureTrace - Advanced Animal Discovery Platform
+# � NatureTrace - Advanced Animal Discovery Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -6,7 +6,7 @@
 
 > **An intelligent wildlife recognition and tracking platform that combines cutting-edge AI with real-time data analytics to help you discover and learn about animals in their natural habitats.**
 
-## 🚀 Features
+## ⭐ Features
 
 ### 🔍 **Enhanced Image Recognition**
 - **Dual AI Analysis**: Combines custom YOLO models with Azure Computer Vision for superior accuracy
@@ -59,7 +59,7 @@
 - **Xeno-Canto** - Bird sound database
 - **Macaulay Library** - Cornell Lab audio collection
 
-## 🔧 Installation & Setup
+## ⚙ Installation & Setup
 
 ### Prerequisites
 - Python 3.8 or higher

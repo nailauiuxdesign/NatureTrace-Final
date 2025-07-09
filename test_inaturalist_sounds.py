@@ -22,7 +22,7 @@ def test_inaturalist_sounds():
         "Rana temporaria" # Common Frog - scientific name
     ]
     
-    print("🔊 Testing iNaturalist Sound Fetching")
+    print("Testing iNaturalist Sound Fetching")
     print("=" * 60)
     
     for animal in test_animals:

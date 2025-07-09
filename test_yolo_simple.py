@@ -81,7 +81,7 @@ def test_model_basic_functionality():
                     confidence = float(box.conf[0])
                     print(f"  - Object {i+1}: Class {class_id}, Confidence: {confidence:.2%}")
             else:
-                print("📊 No objects detected")
+                print("No objects detected")
         
         return True
         

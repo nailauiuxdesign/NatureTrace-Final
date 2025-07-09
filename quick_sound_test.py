@@ -27,7 +27,7 @@ def test_animals_quickly():
         "Polar Bear"      # Previously problematic
     ]
     
-    print("🔊 Quick Animal Sound Test")
+    print("Quick Animal Sound Test")
     print("=" * 50)
     print(f"Testing {len(test_animals)} animals with enhanced 7-source system...")
     print()
@@ -96,7 +96,7 @@ def test_animals_quickly():
     
     # Summary
     print("=" * 50)
-    print("📊 SUMMARY RESULTS")
+    print("SUMMARY RESULTS")
     print("=" * 50)
     
     successful = [r for r in results if r["success"]]

@@ -36,7 +36,7 @@ def test_speech_removal():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🔍 Test Standard Sources"):
+            if st.button("Test Standard Sources"):
                 with st.spinner(f"Testing standard sources for {animal_name}..."):
                     results = test_multiple_sound_sources(animal_name, animal_type)
                     
@@ -80,7 +80,7 @@ def test_speech_removal():
                             st.write(f"- Quality Score: {analysis['quality_score']:.0f}/100")
                             
                             if analysis['recommended']:
-                                st.success("🎯 High quality animal sound!")
+                                st.success("High quality animal sound!")
                             else:
                                 st.warning("⚠️ May contain significant human speech")
                         
@@ -91,7 +91,7 @@ def test_speech_removal():
                             if result.get('speech_removed'):
                                 st.info("🧹 Speech has been removed from this audio")
                             else:
-                                st.info("🔊 Original audio (minimal speech detected)")
+                                st.info("Original audio (minimal speech detected)")
                         
                         # Show original for comparison if different
                         if (result.get('original_url') != result.get('processed_url') and 

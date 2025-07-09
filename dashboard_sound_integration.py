@@ -292,7 +292,7 @@ def streamlit_sound_management_ui():
     """
     Streamlit UI components for sound management (can be integrated into app.py)
     """
-    st.subheader("🔊 Sound Management")
+    st.subheader("Sound Management")
     
     # Sound status overview
     with st.expander("📊 Sound Status Overview", expanded=True):
@@ -340,9 +340,9 @@ def streamlit_sound_management_ui():
                             st.write(f"❌ {animal_result['name']}: {animal_result['message']}")
     
     # Individual animal update
-    with st.expander("🎯 Update Individual Animal"):
+    with st.expander("Update Individual Animal"):
         animal_name = st.text_input("Animal Name")
-        if st.button("🔊 Fetch Sound") and animal_name:
+        if st.button("Fetch Sound") and animal_name:
             with st.spinner(f"Fetching sound for {animal_name}..."):
                 result = dashboard_sound_manager.update_existing_animal_sound(animal_name)
                 
@@ -362,7 +362,7 @@ def streamlit_sound_management_ui():
                 with col1:
                     st.write(f"**{animal['name']}** ({animal['category'] or 'Unknown'})")
                 with col2:
-                    if st.button("🔊", key=f"sound_{animal['id']}"):
+                    if st.button("Play", key=f"sound_{animal['id']}"):
                         with st.spinner("Fetching..."):
                             result = dashboard_sound_manager.update_existing_animal_sound(animal["id"])
                         if result["success"]:
@@ -374,7 +374,7 @@ def streamlit_sound_management_ui():
             st.info("All animals have sounds! 🎉")
 
 if __name__ == "__main__":
-    print("🔊 NatureTrace Dashboard Sound Integration")
+    print("NatureTrace Dashboard Sound Integration")
     print("=" * 50)
     
     # Initialize manager

@@ -44,7 +44,7 @@ def test_azure_with_animal_image():
                 # Show detected animals
                 animals = azure_result.get('animals', [])
                 if animals:
-                    print("\n🐾 Animals Detected:")
+                    print("\nAnimals Detected:")
                     for i, animal in enumerate(animals):
                         print(f"  {i+1}. {animal['name']} (confidence: {animal['confidence']:.2%}, source: {animal['source']})")
                 

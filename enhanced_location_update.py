@@ -391,7 +391,7 @@ def update_existing_animals_with_location():
     """
     Main function to update all existing animals with location data using multiple sources
     """
-    print("🌍 Starting enhanced location update for existing animals...")
+    print("Starting enhanced location update for existing animals...")
     print("Sources: iNaturalist → Wikipedia → Groq AI")
     print("=" * 60)
     
@@ -537,7 +537,7 @@ def main():
         # Step 2: Verify updates
         verify_location_updates()
         
-        print(f"\n🎯 Next Steps:")
+        print(f"\nNext Steps:")
         print(f"   1. Refresh your NatureTrace dashboard")
         print(f"   2. View the enhanced GPS-based maps")
         print(f"   3. Explore individual animal location profiles")

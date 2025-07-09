@@ -7,7 +7,7 @@ import time
 import json
 
 def main():
-    st.title("🔊 Animal Sound Testing Suite")
+    st.title("Animal Sound Testing Suite")
     st.markdown("Testing sound functionality for all animals in the database")
     
     # Fetch animals from database
@@ -117,7 +117,7 @@ def test_individual_animal(animal_name):
                 duration = data.get('duration_estimate_seconds')
                 if duration:
                     if 2 <= duration <= 3:
-                        st.success("🎯 Perfect duration (2-3 seconds)")
+                        st.success("Perfect duration (2-3 seconds)")
                     elif duration < 2:
                         st.warning("⚠️ Too short (less than 2 seconds)")
                     elif duration > 10:
@@ -230,7 +230,7 @@ def run_comprehensive_test(animals):
             duration = best_source_data.get('duration_estimate_seconds')
             if duration:
                 if 2 <= duration <= 3:
-                    row['Duration Status'] = '🎯 Perfect (2-3s)'
+                    row['Duration Status'] = 'Perfect (2-3s)'
                 elif duration < 2:
                     row['Duration Status'] = '⚠️ Too short'
                 elif duration > 10:
@@ -253,7 +253,7 @@ def run_comprehensive_test(animals):
     
     # Summary statistics
     animals_with_sounds = sum(1 for r in all_results if r['Best URL'] != 'None')
-    perfect_duration = sum(1 for r in all_results if '🎯' in r.get('Duration Status', ''))
+    perfect_duration = sum(1 for r in all_results if 'Perfect' in r.get('Duration Status', ''))
     
     st.write("**Summary:**")
     st.write(f"- Animals with valid sounds: {animals_with_sounds}/{len(all_results)}")

@@ -3,7 +3,7 @@ import pandas as pd
 
 def verify_initial_data():
     """Verify that the initial data was successfully loaded"""
-    print("🔍 Verifying Initial Data in NatureTrace Database")
+    print("Verifying Initial Data in NatureTrace Database")
     print("=" * 50)
     
     try:

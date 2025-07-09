@@ -348,21 +348,21 @@ def test_enhanced_recognition_pipeline():
     azure_test = test_azure_connection()
     
     if azure_test['success']:
-        st.success("✅ Azure Computer Vision connection successful")
+        st.success("Azure Computer Vision connection successful")
     else:
-        st.error(f"❌ Azure connection failed: {azure_test['error']}")
+        st.error(f"Azure connection failed: {azure_test['error']}")
     
     # Test Groq connection
     try:
         groq_api_key = st.secrets.get("groq_api_key")
         if groq_api_key:
-            st.success("✅ Groq API key found")
+            st.success("Groq API key found")
         else:
-            st.error("❌ Groq API key not found")
+            st.error("Groq API key not found")
     except:
-        st.error("❌ Failed to check Groq API key")
+        st.error("Failed to check Groq API key")
     
-    st.info("🔧 **Enhanced Pipeline Features:**")
+    st.info("**Enhanced Pipeline Features:**")
     st.write("- Current AI model + Azure Computer Vision analysis")
     st.write("- Groq-powered intelligent comparison")
     st.write("- Smart conflict resolution")

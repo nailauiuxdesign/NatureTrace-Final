@@ -41,7 +41,7 @@ def test_animal_detection():
         
         for i, (url, expected_type) in enumerate(test_images):
             try:
-                print(f"\n🐾 Testing image {i+1}: {expected_type}")
+                print(f"\nTesting image {i+1}: {expected_type}")
                 
                 # Download image with proper User-Agent
                 headers = {

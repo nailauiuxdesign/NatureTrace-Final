@@ -42,7 +42,7 @@ def test_complete_pipeline():
         # Show top results
         animals = azure_result.get('animals', [])
         if animals:
-            print("🐾 Top Animals Detected:")
+            print("Top Animals Detected:")
             for i, animal in enumerate(animals[:3]):
                 print(f"  {i+1}. {animal['name']} (confidence: {animal['confidence']:.2%})")
         else:
@@ -102,7 +102,7 @@ def test_complete_pipeline():
     # Note: This would normally check for duplicates in database
     # For testing, we'll assume it's not a duplicate
     
-    print("🔍 Running enhanced recognition...")
+    print("Running enhanced recognition...")
     try:
         enhanced_result = enhanced_image_recognition(mock_file)
         

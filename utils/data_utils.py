@@ -411,7 +411,7 @@ def save_to_snowflake_with_sound(filename, name, description, facts, category=No
     location_result = {"success": False, "source": None}
     
     if fetch_location and name:
-        logger.info(f"🌍 Fetching location data for {name}...")
+        logger.info(f"Fetching location data for {name}...")
         location_data = fetch_location_for_animal(name, category)
         if location_data:
             location_result = {
@@ -419,9 +419,9 @@ def save_to_snowflake_with_sound(filename, name, description, facts, category=No
                 "source": location_data.get("source", "Unknown"),
                 "location": location_data.get("place_guess", "Unknown location")
             }
-            logger.info(f"✅ Found location for {name}: {location_data.get('place_guess', 'coordinates only')}")
+            logger.info(f"Found location for {name}: {location_data.get('place_guess', 'coordinates only')}")
         else:
-            logger.warning(f"⚠️ No location data found for {name}")
+            logger.warning(f"No location data found for {name}")
     
     conn = get_snowflake_connection()
     if not conn:
@@ -461,7 +461,7 @@ def save_to_snowflake_with_sound(filename, name, description, facts, category=No
         # Fetch and update sound if requested using enhanced logic
         sound_result = None
         if fetch_sound and name:
-            logger.info(f"🔊 Fetching enhanced sound for {name}...")
+            logger.info(f"� Fetching enhanced sound for {name}...")
             sound_result = update_animal_sound_enhanced(
                 animal_id=animal_id, 
                 animal_name=name,
@@ -580,7 +580,7 @@ def match_detected_animal_to_database(detected_animal, confidence, animal_knowle
     if detected_lower in animal_knowledge:
         match_data = animal_knowledge[detected_lower]
         enhanced_confidence = min(0.95, confidence + 0.15)  # Boost confidence for exact match
-        logger.info(f"🎯 Exact database match: {detected_animal} -> {match_data['name']}")
+        logger.info(f"Exact database match: {detected_animal} -> {match_data['name']}")
         return match_data, enhanced_confidence, "exact_match"
     
     # Partial word matching
@@ -602,7 +602,7 @@ def match_detected_animal_to_database(detected_animal, confidence, animal_knowle
     
     if best_match and best_score > 0.3:  # Minimum match threshold
         enhanced_confidence = min(0.85, confidence + (best_score * 0.2))
-        logger.info(f"🔍 Partial database match: {detected_animal} -> {best_match['name']} (score: {best_score:.2f})")
+        logger.info(f"� Partial database match: {detected_animal} -> {best_match['name']} (score: {best_score:.2f})")
         return best_match, enhanced_confidence, "partial_match"
     
     # Category-based fallback matching
@@ -712,7 +712,7 @@ def search_inaturalist_for_location(animal_name, category=None):
                                 "source": "iNaturalist"
                             }
                             
-                            logger.info(f"✅ Found iNaturalist location for {animal_name}")
+                            logger.info(f"Found iNaturalist location for {animal_name}")
                             return location_data
                 
                 # Small delay between queries
@@ -772,7 +772,7 @@ def get_location_from_wikipedia(animal_name):
                     # Try to get coordinates for this location using a geocoding service
                     coords = geocode_location(location_text)
                     if coords:
-                        logger.info(f"✅ Found Wikipedia location for {animal_name}: {location_text}")
+                        logger.info(f"Found Wikipedia location for {animal_name}: {location_text}")
                         return {
                             "latitude": coords['lat'],
                             "longitude": coords['lng'],
@@ -900,7 +900,7 @@ Examples:
                     place_description += f", {country}"
                 place_description += " (AI habitat)"
                 
-                logger.info(f"✅ Found Groq location for {animal_name}")
+                logger.info(f"Found Groq location for {animal_name}")
                 
                 return {
                     "latitude": coords["lat"],
@@ -933,24 +933,24 @@ def fetch_location_for_animal(animal_name, category=None):
         dict: Location data or None if not found from any source
     """
     # First try iNaturalist (most reliable for actual sightings)
-    logger.info(f"🔍 [1/3] Searching iNaturalist for {animal_name}...")
+    logger.info(f"� [1/3] Searching iNaturalist for {animal_name}...")
     inaturalist_result = search_inaturalist_for_location(animal_name, category)
     if inaturalist_result:
         return inaturalist_result
     
     # If iNaturalist fails, try Wikipedia (good for general habitat info)
-    logger.info(f"🔍 [2/3] Searching Wikipedia for {animal_name}...")
+    logger.info(f"� [2/3] Searching Wikipedia for {animal_name}...")
     wikipedia_result = get_location_from_wikipedia(animal_name)
     if wikipedia_result:
         return wikipedia_result
     
     # If Wikipedia fails, try Groq AI (AI-generated typical habitat)
-    logger.info(f"🔍 [3/3] Using Groq AI for {animal_name}...")
+    logger.info(f"� [3/3] Using Groq AI for {animal_name}...")
     groq_result = get_location_from_groq(animal_name, category)
     if groq_result:
         return groq_result
     
-    logger.warning(f"❌ No location data found for {animal_name} from any source")
+    logger.warning(f"No location data found for {animal_name} from any source")
     return None
 
 def ensure_sound_columns_exist():

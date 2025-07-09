@@ -99,7 +99,7 @@ def test_improved_classification():
         ]
         
         for i, test_case in enumerate(test_cases, 1):
-            print(f"\n🐾 Test {i}: {test_case['name']}")
+            print(f"\nTest {i}: {test_case['name']}")
             print(f"   Initial detection: {test_case['detected_animal']} (confidence: {test_case['confidence']:.1%})")
             
             # Analyze features

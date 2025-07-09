@@ -17,7 +17,7 @@ from io import BytesIO
 
 def test_azure_computer_vision():
     """Test Azure Computer Vision API"""
-    print("🔍 Testing Azure Computer Vision...")
+    print("Testing Azure Computer Vision...")
     
     # Test connection first
     connection_test = test_azure_connection()

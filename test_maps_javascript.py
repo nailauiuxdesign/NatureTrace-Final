@@ -32,7 +32,7 @@ def test_map_javascript_generation():
     df = pd.DataFrame(test_data)
     
     print(f"📊 Test data created with {len(df)} animals")
-    print("🔍 Testing animals with special characters in names:")
+    print("Testing animals with special characters in names:")
     for name in df['NAME']:
         print(f"  - {name}")
     

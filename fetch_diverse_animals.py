@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     """Fetch diverse animal data with enhanced options"""
-    print("🌍 NatureTrace Enhanced Diverse Data Fetcher")
+    print("NatureTrace Enhanced Diverse Data Fetcher")
     print("=" * 55)
     print("This will fetch 50+ diverse animal species from iNaturalist")
     print("including birds, mammals, reptiles, amphibians, fish, and insects")

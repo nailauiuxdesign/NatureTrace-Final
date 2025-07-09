@@ -12,11 +12,11 @@ from dashboard_sound_integration import dashboard_sound_manager
 import time
 
 def main():
-    print("🔊 NatureTrace Dashboard - Batch Sound Update")
+    print("NatureTrace Dashboard - Batch Sound Update")
     print("=" * 50)
     
     # Get current status
-    print("📊 Getting current sound status...")
+    print("Getting current sound status...")
     status = dashboard_sound_manager.get_dashboard_sound_status()
     
     if "error" in status:

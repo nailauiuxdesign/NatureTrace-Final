@@ -53,8 +53,8 @@ def get_animal_habitat_map(animal_name):
                     html = f"""
                     <div style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                         <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 10px; text-align: center;">
-                            <h4 style="margin: 0; font-size: 1.1em;">🎯 Precise Location: {animal_name}</h4>
-                            <p style="margin: 5px 0 0 0; font-size: 0.9em;">📍 {location_info}</p>
+                            <h4 style="margin: 0; font-size: 1.1em;">Precise Location: {animal_name}</h4>
+                            <p style="margin: 5px 0 0 0; font-size: 0.9em;">{location_info}</p>
                         </div>
                         <iframe
                             width="100%"
@@ -65,7 +65,7 @@ def get_animal_habitat_map(animal_name):
                             allowfullscreen>
                         </iframe>
                         <div style="background: #f8f9fa; padding: 8px; text-align: center; border-top: 1px solid #e9ecef;">
-                            <small style="color: #28a745;">✅ Real GPS location from database</small>
+                            <small style="color: #28a745;">Real GPS location from database</small>
                         </div>
                     </div>
                     """
@@ -79,8 +79,8 @@ def get_animal_habitat_map(animal_name):
     html = f"""
     <div style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px; text-align: center;">
-            <h4 style="margin: 0; font-size: 1.1em;">🌍 Habitat Search: {animal_name}</h4>
-            <p style="margin: 5px 0 0 0; font-size: 0.9em;">🔍 General habitat areas</p>
+            <h4 style="margin: 0; font-size: 1.1em;">Habitat Search: {animal_name}</h4>
+            <p style="margin: 5px 0 0 0; font-size: 0.9em;">� General habitat areas</p>
         </div>
         <iframe
             width="100%"
@@ -91,7 +91,7 @@ def get_animal_habitat_map(animal_name):
             allowfullscreen>
         </iframe>
         <div style="background: #f8f9fa; padding: 8px; text-align: center; border-top: 1px solid #e9ecef;">
-            <small style="color: #6c757d;">🔍 Habitat search - upload image for precise location</small>
+            <small style="color: #6c757d;">� Habitat search - upload image for precise location</small>
         </div>
     </div>
     """
@@ -138,7 +138,7 @@ def get_animal_habitat_map_enhanced(animal_name, map_type="search"):
         </iframe>
     </div>
     <p style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9em;">
-        🗺️ Showing habitat and conservation areas for <strong>{animal_name}</strong>
+        Showing habitat and conservation areas for <strong>{animal_name}</strong>
     </p>
     """
     return html
@@ -179,9 +179,9 @@ def get_interactive_map_with_controls(animal_name):
                     html = f"""
                     <div style="border-radius: 15px; overflow: hidden; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);">
                         <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 15px; text-align: center;">
-                            <h3 style="margin: 0; font-size: 1.2em;">🎯 {animal_name} Precise Location</h3>
-                            <p style="margin: 5px 0 0 0; font-size: 0.9em;">📍 {location_info}</p>
-                            <p style="margin: 5px 0 0 0; font-size: 0.8em; opacity: 0.9;">🏷️ {category} • GPS Coordinates Available</p>
+                            <h3 style="margin: 0; font-size: 1.2em;">{animal_name} Precise Location</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 0.9em;">{location_info}</p>
+                            <p style="margin: 5px 0 0 0; font-size: 0.8em; opacity: 0.9;">{category} • GPS Coordinates Available</p>
                         </div>
                         <iframe
                             width="100%"
@@ -193,9 +193,9 @@ def get_interactive_map_with_controls(animal_name):
                         </iframe>
                         <div style="background: #f8f9fa; padding: 10px; text-align: center; border-top: 1px solid #e9ecef;">
                             <div style="display: flex; justify-content: space-around; align-items: center;">
-                                <small style="color: #28a745; font-weight: bold;">✅ Real GPS Data</small>
-                                <small style="color: #6c757d;">🛰️ Satellite View</small>
-                                <small style="color: #6c757d;">📍 Exact Location</small>
+                                <small style="color: #28a745; font-weight: bold;">Real GPS Data</small>
+                                <small style="color: #6c757d;">Satellite View</small>
+                                <small style="color: #6c757d;">Exact Location</small>
                             </div>
                         </div>
                     </div>
@@ -215,7 +215,7 @@ def get_interactive_map_with_controls(animal_name):
     html = f"""
     <div style="border-radius: 15px; overflow: hidden; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; text-align: center;">
-            <h3 style="margin: 0; font-size: 1.2em;">🌍 {animal_name} Habitat Map</h3>
+            <h3 style="margin: 0; font-size: 1.2em;">{animal_name} Habitat Map</h3>
             <p style="margin: 5px 0 0 0; font-size: 0.9em; opacity: 0.9;">Explore natural habitats and conservation areas</p>
         </div>
         <iframe
@@ -227,7 +227,7 @@ def get_interactive_map_with_controls(animal_name):
             allowfullscreen>
         </iframe>
         <div style="background: #f8f9fa; padding: 10px; text-align: center; border-top: 1px solid #e9ecef;">
-            <small style="color: #6c757d;">🔍 Search includes habitats, national parks, and conservation areas</small>
+            <small style="color: #6c757d;">� Search includes habitats, national parks, and conservation areas</small>
         </div>
     </div>
     """
@@ -318,7 +318,7 @@ def get_comprehensive_animal_map(df, selected_category=None):
                         border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
                         z-index: 1000; max-width: 180px; backdrop-filter: blur(5px);">
                 <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333; text-align: center;">
-                    🗺️ Animal Categories
+                    Animal Categories
                 </h4>
                 {''.join(legend_items)}
             </div>
@@ -391,11 +391,11 @@ def get_comprehensive_animal_map(df, selected_category=None):
     if gps_animals > 0:
         habitat_animals = len(filtered_df) - gps_animals
         if habitat_animals > 0:
-            status_indicator = f'<div style="margin-top: 12px; display: flex; justify-content: center; gap: 20px;"><span style="background: rgba(76, 175, 80, 0.9); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8em;">📍 {gps_animals} GPS locations</span><span style="background: rgba(103, 126, 234, 0.9); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8em;">🔍 {habitat_animals} habitat areas</span></div>'
+            status_indicator = f'<div style="margin-top: 12px; display: flex; justify-content: center; gap: 20px;"><span style="background: rgba(76, 175, 80, 0.9); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8em;">{gps_animals} GPS locations</span><span style="background: rgba(103, 126, 234, 0.9); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8em;">{habitat_animals} habitat areas</span></div>'
         else:
-            status_indicator = f'<div style="margin-top: 12px;"><span style="background: rgba(76, 175, 80, 0.9); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.9em; font-weight: 500;">📍 All {gps_animals} animals with GPS data!</span></div>'
+            status_indicator = f'<div style="margin-top: 12px;"><span style="background: rgba(76, 175, 80, 0.9); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.9em; font-weight: 500;">All {gps_animals} animals with GPS data!</span></div>'
     else:
-        status_indicator = f'<div style="margin-top: 12px;"><span style="background: rgba(103, 126, 234, 0.9); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.9em; font-weight: 500;">🔍 Habitat-based locations</span></div>'
+        status_indicator = f'<div style="margin-top: 12px;"><span style="background: rgba(103, 126, 234, 0.9); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.9em; font-weight: 500;">� Habitat-based locations</span></div>'
     
     # Create the enhanced map with JavaScript API
     html = f'''
@@ -403,7 +403,7 @@ def get_comprehensive_animal_map(df, selected_category=None):
                 box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                     color: white; padding: 20px; text-align: center;">
-            <h2 style="margin: 0; font-size: 1.4em; font-weight: 600;">🌍 {map_title}</h2>
+            <h2 style="margin: 0; font-size: 1.4em; font-weight: 600;">{map_title}</h2>
             <p style="margin: 10px 0 0 0; font-size: 1em; opacity: 0.9;">
                 {"Enhanced with GPS coordinates and habitat areas" if gps_animals > 0 else "Habitat and conservation area overview"}
             </p>
@@ -418,13 +418,13 @@ def get_comprehensive_animal_map(df, selected_category=None):
         <div style="background: #f8f9fa; padding: 15px; border-top: 1px solid #e9ecef;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <div>
-                    <strong style="color: #495057;">🔍 Map Coverage:</strong>
+                    <strong style="color: #495057;">� Map Coverage:</strong>
                     <span style="color: #6c757d; margin-left: 10px;">
                         {len(filtered_df)} animals • {"GPS locations • " if gps_animals > 0 else ""}Habitats • Conservation areas
                     </span>
                 </div>
                 <div style="font-size: 0.9em; color: #6c757d;">
-                    🌐 {"Enhanced GPS mapping" if gps_animals > 0 else "Interactive habitat mapping"}
+                    {"Enhanced GPS mapping" if gps_animals > 0 else "Interactive habitat mapping"}
                 </div>
             </div>
         </div>
@@ -550,17 +550,17 @@ def get_comprehensive_animal_map(df, selected_category=None):
                 }});
                 
                 // Create info window with location type indicator
-                const locationTypeIcon = animal.location_type === 'gps' ? '📍' : '🔍';
+                const locationTypeIcon = animal.location_type === 'gps' ? 'GPS' : 'Habitat';
                 const locationTypeText = animal.location_type === 'gps' ? 'GPS Location' : 'Habitat Area';
                 
                 marker.addListener('click', () => {{
                     const locationBadge = animal.location_type === 'gps' ? 
-                        '<div style="margin-top: 8px; padding: 4px 8px; background: #e8f5e9; border-radius: 4px; font-size: 0.8em; color: #2e7d32;">✅ Precise location data</div>' : 
-                        '<div style="margin-top: 8px; padding: 4px 8px; background: #e3f2fd; border-radius: 4px; font-size: 0.8em; color: #1565c0;">🔍 General habitat area</div>';
+                        '<div style="margin-top: 8px; padding: 4px 8px; background: #e8f5e9; border-radius: 4px; font-size: 0.8em; color: #2e7d32;">Precise location data</div>' : 
+                        '<div style="margin-top: 8px; padding: 4px 8px; background: #e3f2fd; border-radius: 4px; font-size: 0.8em; color: #1565c0;">� General habitat area</div>';
                         
                     infoWindow.setContent(`
                         <div style="padding: 12px; max-width: 220px;">
-                            <h4 style="margin: 0 0 8px 0; color: #333;">🐾 ${{animal.name}}</h4>
+                            <h4 style="margin: 0 0 8px 0; color: #333;">${{animal.name}}</h4>
                             <p style="margin: 0 0 5px 0; color: #666;">
                                 <strong>Category:</strong> ${{animal.category}}
                             </p>
@@ -664,7 +664,7 @@ def get_category_statistics_map(df):
         <div style="background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <div>
-                    <h2 style="margin: 0; font-size: 1.4em;">📊 Animal Distribution Overview</h2>
+                    <h2 style="margin: 0; font-size: 1.4em;">� Animal Distribution Overview</h2>
                     <p style="margin: 5px 0 0 0; font-size: 1em; opacity: 0.9;">
                         Total: {total_animals} animals across multiple categories
                     </p>
@@ -735,14 +735,14 @@ def get_simple_colored_map(df, selected_category=None):
                 box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                     color: white; padding: 20px; text-align: center;">
-            <h2 style="margin: 0; font-size: 1.4em; font-weight: 600;">🌍 {map_title}</h2>
+            <h2 style="margin: 0; font-size: 1.4em; font-weight: 600;">{map_title}</h2>
             <p style="margin: 10px 0 0 0; font-size: 1em; opacity: 0.9;">
                 Showing {len(filtered_df)} animals across different regions
             </p>
             <div style="margin-top: 12px;">
                 <span style="background: rgba(255,255,255,0.25); padding: 6px 16px; 
                            border-radius: 20px; font-size: 0.9em; font-weight: 500;">
-                    🗺️ Comprehensive habitat overview
+                    Comprehensive habitat overview
                 </span>
             </div>
         </div>
@@ -762,7 +762,7 @@ def get_simple_colored_map(df, selected_category=None):
                         border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
                         z-index: 1000; max-width: 200px;">
                 <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333; text-align: center;">
-                    📊 Animals Overview
+                    � Animals Overview
                 </h4>
                 <div style="font-size: 12px; color: #666;">
                     <strong>Total Animals:</strong> {len(filtered_df)}<br>
@@ -774,13 +774,13 @@ def get_simple_colored_map(df, selected_category=None):
         <div style="background: #f8f9fa; padding: 15px; border-top: 1px solid #e9ecef;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <div>
-                    <strong style="color: #495057;">🔍 Showing:</strong>
+                    <strong style="color: #495057;">� Showing:</strong>
                     <span style="color: #6c757d; margin-left: 10px;">
                         {len(filtered_df)} animals • Habitats • Conservation areas • Wildlife reserves
                     </span>
                 </div>
                 <div style="font-size: 0.9em; color: #6c757d;">
-                    🌐 Google Maps Enhanced View
+                    Google Maps Enhanced View
                 </div>
             </div>
         </div>
@@ -876,13 +876,13 @@ def get_actual_locations_map(df, selected_category=None):
         """)
         
         # Create info window content
-        location_info = f"📍 {place_guess}" if place_guess else f"📍 {lat:.4f}, {lng:.4f}"
+        location_info = f"{place_guess}" if place_guess else f"{lat:.4f}, {lng:.4f}"
         info_content = f"""
         <div style="max-width: 300px;">
-            <h3 style="color: {color}; margin: 0 0 10px 0;">🐾 {name}</h3>
+            <h3 style="color: {color}; margin: 0 0 10px 0;">{name}</h3>
             <p><strong>Category:</strong> {category}</p>
             <p><strong>Location:</strong> {location_info}</p>
-            <button onclick="window.open('?page=profile&animal={name.replace(' ', '%20')}', '_self')" 
+            <button onclick="window.open('?page=Profiles&animal={name.replace(' ', '%20')}', '_self')" 
                     style="background: {color}; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
                 View Profile
             </button>
@@ -949,7 +949,7 @@ def get_actual_locations_map(df, selected_category=None):
                 var legend = document.createElement('div');
                 legend.innerHTML = `
                     <div style="background: white; padding: 15px; margin: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                        <h4 style="margin: 0 0 10px 0;">🗺️ Animal Locations</h4>
+                        <h4 style="margin: 0 0 10px 0;">Animal Locations</h4>
                         <p style="margin: 0; font-size: 12px;"><strong>{len(valid_locations)}</strong> animals with GPS coordinates</p>
                         <p style="margin: 5px 0 0 0; font-size: 12px;">Click markers to view animal profiles</p>
                     </div>
@@ -1048,11 +1048,11 @@ def get_location_enhanced_habitat_map(animal_name, df=None):
             # Create info window content for JSON encoding
             info_content = f"""
                 <div style="max-width: 250px;">
-                    <h4 style="color: #FF4444; margin: 0 0 10px 0;">🎯 Actual Sighting</h4>
-                    <p style="margin: 5px 0;"><strong>🐾 {animal_name}</strong></p>
-                    <p style="margin: 5px 0;"><strong>🏷️ Category:</strong> {loc['category']}</p>
-                    <p style="margin: 5px 0;"><strong>📍 Location:</strong> {location_display}</p>
-                    <button onclick="window.open('?page=profile&animal={animal_name.replace(' ', '%20')}', '_self')" 
+                    <h4 style="color: #FF4444; margin: 0 0 10px 0;">Actual Sighting</h4>
+                    <p style="margin: 5px 0;"><strong>{animal_name}</strong></p>
+                    <p style="margin: 5px 0;"><strong>Category:</strong> {loc['category']}</p>
+                    <p style="margin: 5px 0;"><strong>Location:</strong> {location_display}</p>
+                    <button onclick="window.open('?page=Profiles&animal={animal_name.replace(' ', '%20')}', '_self')" 
                             style="background: #FF4444; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
                         View Profile
                     </button>
@@ -1075,7 +1075,7 @@ def get_location_enhanced_habitat_map(animal_name, df=None):
         
         map_center = f"{{lat: {center_lat}, lng: {center_lng}}}"
         zoom_level = 8
-        status_text = f"✅ Showing {len(actual_locations)} actual sighting(s)"
+        status_text = f"Showing {len(actual_locations)} actual sighting(s)"
         map_type = "'hybrid'"
     else:
         # Fallback to habitat search center
@@ -1083,7 +1083,7 @@ def get_location_enhanced_habitat_map(animal_name, df=None):
         zoom_level = 3
         markers_js = []
         info_windows_js = []
-        status_text = "🔍 No GPS data - showing habitat search"
+        status_text = "� No GPS data - showing habitat search"
         map_type = "'terrain'"
     
     html = f"""
@@ -1112,7 +1112,7 @@ def get_location_enhanced_habitat_map(animal_name, df=None):
     <body>
         <div class="map-container">
             <div class="map-header">
-                <h3 style="margin: 0; font-size: 1.1em;">🗺️ {animal_name} Location Map</h3>
+                <h3 style="margin: 0; font-size: 1.1em;">{animal_name} Location Map</h3>
                 <p style="margin: 5px 0 0 0; font-size: 0.9em;">{status_text}</p>
             </div>
             <div id="map"></div>
@@ -1159,7 +1159,7 @@ def get_location_enhanced_habitat_map(animal_name, df=None):
                                 }});
                                 
                                 var infoWindow = new google.maps.InfoWindow({{
-                                    content: '<div><h4>🌿 Habitat Area</h4><p>' + place.name + '</p></div>'
+                                    content: '<div><h4>� Habitat Area</h4><p>' + place.name + '</p></div>'
                                 }});
                                 
                                 marker.addListener('click', function() {{
@@ -1177,7 +1177,7 @@ def get_location_enhanced_habitat_map(animal_name, df=None):
                 var legend = document.createElement('div');
                 legend.innerHTML = `
                     <div style="background: rgba(255,255,255,0.95); padding: 12px; margin: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); backdrop-filter: blur(5px);">
-                        <h4 style="margin: 0 0 8px 0; color: #333;">🗺️ {animal_name}</h4>
+                        <h4 style="margin: 0 0 8px 0; color: #333;">{animal_name}</h4>
                         <div style="display: flex; align-items: center; margin: 4px 0;">
                             <div style="width: 12px; height: 12px; background: #FF4444; border-radius: 50%; margin-right: 8px; border: 2px solid white;"></div>
                             <span style="font-size: 12px;">GPS Sightings ({len(actual_locations)})</span>

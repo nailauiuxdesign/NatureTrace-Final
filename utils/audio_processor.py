@@ -26,7 +26,7 @@ class AnimalSoundProcessor:
     
     def __init__(self):
         if not AUDIO_PROCESSING_AVAILABLE:
-            st.warning("⚠️ Audio processing libraries not installed. Please install: pip install pydub SpeechRecognition")
+            st.warning("Audio processing libraries not installed. Please install: pip install pydub SpeechRecognition")
             self.recognizer = None
         else:
             self.recognizer = sr.Recognizer()

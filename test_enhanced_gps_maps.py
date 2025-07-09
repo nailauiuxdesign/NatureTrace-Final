@@ -74,7 +74,7 @@ def test_gps_integration():
                 else:
                     print("   ⚠️ GPS-only map generation failed")
                 
-                print(f"\n🎯 Enhanced location integration test completed!")
+                print(f"\nEnhanced location integration test completed!")
                 print(f"   - All map functions now prioritize GPS data from database")
                 print(f"   - Fallback to habitat search when GPS unavailable")
                 print(f"   - Visual indicators distinguish GPS vs habitat locations")

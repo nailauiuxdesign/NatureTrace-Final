@@ -20,7 +20,6 @@ def load_yolo_model():
         model = YOLO('yolov8l.pt')  # Downloads automatically if not present
         return model
     except Exception as e:
-        st.warning(f"Could not load YOLOv8 model: {e}")
         return None
 
 # Complete YOLO COCO animal class mapping (more comprehensive)
@@ -119,7 +118,6 @@ def detect_animals_with_yolo(image):
         return None, None, None
         
     except Exception as e:
-        st.warning(f"YOLOv8 detection failed: {e}")
         return None, None, None
 
 def analyze_animal_features(image, bbox=None):
@@ -185,7 +183,6 @@ def classify_animal_advanced(detected_animal, confidence, features=None, image=N
         from utils.data_utils import match_detected_animal_to_database, get_enhanced_animal_description
     except Exception as e:
         animal_knowledge = {}
-        st.warning(f"Database knowledge unavailable: {e}")
     
     # PHASE 1: Database-Enhanced Matching
     if animal_knowledge:
@@ -200,7 +197,6 @@ def classify_animal_advanced(detected_animal, confidence, features=None, image=N
             )
             
             if enhanced_name:
-                st.success(f"🎯 Database match found: {enhanced_name} ({match_type})")
                 return enhanced_name, db_category, enhanced_description, enhanced_confidence
     
     # PHASE 2: Advanced Computer Vision Analysis (fallback if no database match)
@@ -320,7 +316,6 @@ def classify_animal_advanced(detected_animal, confidence, features=None, image=N
             )
             
             if enhanced_name:
-                st.info(f"🔄 Refined database match: {base_animal} -> {enhanced_name}")
                 return enhanced_name, db_category, enhanced_description, enhanced_confidence
     
     # PHASE 4: Final confidence adjustment and fallback
@@ -401,15 +396,11 @@ def process_images(uploaded_file):
             image = image.convert('RGB')
         
         # Enhanced YOLOv8l detection with database integration
-        with st.spinner("🔍 Analyzing image with YOLOv8 Large model + Database knowledge..."):
-            detected_animals, confidences, bboxes = detect_animals_with_yolo(image)
+        detected_animals, confidences, bboxes = detect_animals_with_yolo(image)
             
         # Load database knowledge for enhanced matching
         animal_knowledge = load_animal_database_knowledge()
         db_animals_count = len(set([v.get('name', '') for v in animal_knowledge.values() if v.get('name')]))
-        
-        if db_animals_count > 0:
-            st.info(f"🗄️ Using database knowledge of {db_animals_count} animals from your Snowflake data")
         
         if detected_animals and confidences:
             # Get the best detection
@@ -426,8 +417,6 @@ def process_images(uploaded_file):
             )
             
             if final_confidence > 0.35:  # Lower threshold for accepting YOLO results
-                st.success(f"✅ Detected {refined_name} with {final_confidence:.1%} confidence!")
-                
                 # Add feature-based description enhancement
                 enhanced_description = f"{description} Detected using advanced AI analysis."
                 
@@ -435,107 +424,100 @@ def process_images(uploaded_file):
                 if len(detected_animals) > 1:
                     other_detections = [f"{detected_animals[i]} ({confidences[i]:.1%})" 
                                       for i in range(1, min(3, len(detected_animals)))]
-                    st.info(f"🔍 Other possible detections: {', '.join(other_detections)}")
                 
                 return refined_name, category, enhanced_description
         
         # Fallback to Groq API with database enhancement
-        st.warning("🤖 YOLOv8 detection unclear, trying advanced AI analysis with database knowledge...")
         
-        with st.spinner("📡 Connecting to Groq API for enhanced analysis..."):
-            try:
-                # Import here to avoid issues if not available
-                from groq import Groq
-                import base64
-                
-                # Convert image to base64 for API
-                buffered = io.BytesIO()
-                image.save(buffered, format="JPEG")
-                img_base64 = base64.b64encode(buffered.getvalue()).decode()
-                
-                # Initialize Groq client
-                client = Groq(api_key=st.secrets.get("GROQ_API_KEY"))
-                
-                # Create enhanced prompt with database knowledge
-                db_animals_list = ""
-                if animal_knowledge:
-                    unique_animals = list(set([v.get('name', '') for v in animal_knowledge.values() if v.get('name')]))[:20]
-                    db_animals_list = f"\n\nKnown animals in database: {', '.join(unique_animals[:20])}{'...' if len(unique_animals) > 20 else ''}"
-                
-                prompt = f"""
-                Analyze this image and identify the specific animal. Be very precise about the animal type.
-                
-                IMPORTANT: 
-                - If you see a whale or marine mammal, do NOT call it a bird
-                - If you see a big cat (lion, tiger, leopard, cheetah), be specific about which one
-                - If you see a wolf, do NOT call it a dog or lion
-                - If you see a leopard, do NOT call it a lion
-                
-                Look for these distinguishing features:
-                - Marine animals: water environment, streamlined body, fins/flippers
-                - Lions: mane (males), tawny color, pride behavior
-                - Tigers: orange with black stripes
-                - Leopards: spotted pattern, rosettes, climbing trees
-                - Cheetahs: solid spots, lean build, small head
-                - Wolves: pointed ears, longer snout, wild environment
-                
-                {db_animals_list}
-                
-                Provide exactly in this format:
-                Animal_Name|Category|Description
-                
-                Examples:
-                - Humpback Whale|Mammal|A large marine mammal found in oceans worldwide
-                - Leopard|Mammal|A spotted big cat known for its climbing ability
-                - Gray Wolf|Mammal|A wild canine and ancestor of domestic dogs
-                """
-                
-                response = client.chat.completions.create(
-                    model="llama-3.2-90b-vision-preview",
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": prompt},
-                                {
-                                    "type": "image_url",
-                                    "image_url": {
-                                        "url": f"data:image/jpeg;base64,{img_base64}"
-                                    }
+        try:
+            # Import here to avoid issues if not available
+            from groq import Groq
+            import base64
+            
+            # Convert image to base64 for API
+            buffered = io.BytesIO()
+            image.save(buffered, format="JPEG")
+            img_base64 = base64.b64encode(buffered.getvalue()).decode()
+            
+            # Initialize Groq client
+            client = Groq(api_key=st.secrets.get("GROQ_API_KEY"))
+            
+            # Create enhanced prompt with database knowledge
+            db_animals_list = ""
+            if animal_knowledge:
+                unique_animals = list(set([v.get('name', '') for v in animal_knowledge.values() if v.get('name')]))[:20]
+                db_animals_list = f"\n\nKnown animals in database: {', '.join(unique_animals[:20])}{'...' if len(unique_animals) > 20 else ''}"
+            
+            prompt = f"""
+            Analyze this image and identify the specific animal. Be very precise about the animal type.
+            
+            IMPORTANT: 
+            - If you see a whale or marine mammal, do NOT call it a bird
+            - If you see a big cat (lion, tiger, leopard, cheetah), be specific about which one
+            - If you see a wolf, do NOT call it a dog or lion
+            - If you see a leopard, do NOT call it a lion
+            
+            Look for these distinguishing features:
+            - Marine animals: water environment, streamlined body, fins/flippers
+            - Lions: mane (males), tawny color, pride behavior
+            - Tigers: orange with black stripes
+            - Leopards: spotted pattern, rosettes, climbing trees
+            - Cheetahs: solid spots, lean build, small head
+            - Wolves: pointed ears, longer snout, wild environment
+            
+            {db_animals_list}
+            
+            Provide exactly in this format:
+            Animal_Name|Category|Description
+            
+            Examples:
+            - Humpback Whale|Mammal|A large marine mammal found in oceans worldwide
+            - Leopard|Mammal|A spotted big cat known for its climbing ability
+            - Gray Wolf|Mammal|A wild canine and ancestor of domestic dogs
+            """
+            
+            response = client.chat.completions.create(
+                model="llama-3.2-90b-vision-preview",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{img_base64}"
                                 }
-                            ]
-                        }
-                    ],
-                    max_tokens=300,
-                    temperature=0.1
-                )
-                
-                result = response.choices[0].message.content.strip()
-                
-                # Parse the response
-                if '|' in result:
-                    parts = result.split('|')
-                    if len(parts) >= 3:
-                        animal_name = parts[0].strip()
-                        animal_type = parts[1].strip()
-                        animal_desc = parts[2].strip()
-                        
-                        st.success(f"🎯 Advanced AI identified: {animal_name}")
-                        return animal_name, animal_type, f"{animal_desc} (Identified using advanced vision AI)"
-                
-                # If parsing fails, use the full response
-                st.success("🎯 Advanced AI analysis completed")
-                return "Unknown Animal", "Unknown", f"AI Analysis: {result}"
-                
-            except Exception as groq_error:
-                st.error(f"❌ Advanced AI analysis failed: {groq_error}")
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=300,
+                temperature=0.1
+            )
+            
+            result = response.choices[0].message.content.strip()
+            
+            # Parse the response
+            if '|' in result:
+                parts = result.split('|')
+                if len(parts) >= 3:
+                    animal_name = parts[0].strip()
+                    animal_type = parts[1].strip()
+                    animal_desc = parts[2].strip()
+                    
+                    return animal_name, animal_type, f"{animal_desc} (Identified using advanced vision AI)"
+            
+            # If parsing fails, use the full response
+            return "Unknown Animal", "Unknown", f"AI Analysis: {result}"
+            
+        except Exception as groq_error:
+            pass
         
         # Final fallback
-        st.warning("⚠️ Could not identify animal accurately")
         return "Unknown Animal", "Unknown", "Unable to identify the animal in this image. Please try a clearer image."
         
     except Exception as e:
-        st.error(f"❌ Image processing failed: {e}")
         return "Processing Error", "Unknown", f"Error processing image: {str(e)}"
         
     except Exception as e:
@@ -733,7 +715,6 @@ def process_images_in_chunks(uploaded_files, chunk_size=5, timeout=30):
         chunk_results = []
         for uploaded_file in chunk:
             if time.time() - start_time > timeout:
-                st.warning("Processing chunk timed out.")
                 break
             # Call the process_images function defined earlier in this file
             result = process_images(uploaded_file)
@@ -750,7 +731,6 @@ def load_animal_database_knowledge():
         from utils.data_utils import get_animal_database_knowledge
         return get_animal_database_knowledge()
     except Exception as e:
-        st.warning(f"Could not load database knowledge: {e}")
         return {}
 
 # Enhanced animal categorization with better mammal distinctions

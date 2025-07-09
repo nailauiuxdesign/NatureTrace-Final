@@ -26,7 +26,7 @@ def test_database_connection():
 
 def test_sound_status():
     """Test getting dashboard sound status"""
-    print("📊 Testing sound status retrieval...")
+    print("Testing sound status retrieval...")
     status = dashboard_sound_manager.get_dashboard_sound_status()
     
     if "error" in status:
@@ -45,7 +45,7 @@ def test_sound_status():
 
 def test_animals_without_sounds():
     """Test getting animals without sounds"""
-    print("🔍 Testing animals without sounds retrieval...")
+    print("Testing animals without sounds retrieval...")
     animals = dashboard_sound_manager.get_animals_without_sounds(limit=5)
     
     if animals:
@@ -59,7 +59,7 @@ def test_animals_without_sounds():
 
 def test_single_animal_update():
     """Test updating sound for a single animal"""
-    print("🎯 Testing single animal sound update...")
+    print("Testing single animal sound update...")
     
     # Get an animal without sound first
     animals = dashboard_sound_manager.get_animals_without_sounds(limit=1)

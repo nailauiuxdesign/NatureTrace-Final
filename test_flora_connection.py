@@ -20,7 +20,7 @@ def test_flora_connection():
         
         cursor = conn.cursor()
         
-        # Check current context and available roles
+        # Check current context and available roles,
         cursor.execute("SELECT CURRENT_USER(), CURRENT_ROLE(), CURRENT_ACCOUNT(), CURRENT_REGION()")
         user, role, account, region = cursor.fetchone()
         print(f"✅ Connected successfully!")
